@@ -286,49 +286,13 @@
       border: 1px solid rgba(255,255,255,0.25);
     }
 
-    /* ── Screen 9: Causal loop ───────────────────────────────────────────────── */
-    #s9-screen {
-      position: fixed; inset: 0;
-      background: #1a1f1a;
-      z-index: 8000; display: flex; flex-direction: column;
-      align-items: center;
-      font-family: Georgia, serif; color: #fff;
-      overflow: hidden;
-    }
-    #s9-title { font-size: 32px; font-style: italic; margin-top: 24px; }
-    #s9-subtitle { font-size: 16px; opacity: 0.65; margin-top: 6px; margin-bottom: 16px; }
-    #s9-main { position: relative; flex: 1; width: 100%; display: flex; }
-    #s9-diagram { position: relative; flex: 1; }
-    #s9-fact {
-      width: 260px; background: rgba(0,0,0,0.45); border-left: 1px solid rgba(255,255,255,0.15);
-      padding: 24px 18px; font-style: italic; font-size: 14px; line-height: 1.6;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    #s9-fact h3 { font-size: 18px; font-style: normal; margin-bottom: 4px; color: #a8d8a8; }
-    .causal-node {
-      position: absolute; background: #2d4a2d;
-      border: 1px solid rgba(255,255,255,0.30);
-      border-radius: 8px; padding: 10px 16px;
-      font-size: 13px; text-align: center; cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-      white-space: nowrap; user-select: none;
-    }
-    .causal-node:hover, .causal-node.active { background: #3d6b3d; border-color: rgba(255,255,255,0.7); }
-    .causal-node .node-stat { font-size: 11px; color: #a8d8a8; margin-top: 3px; display: block; }
-    #s9-bottom { padding: 12px 24px; display: flex; align-items: center; gap: 24px; width: 100%; background: rgba(0,0,0,0.3); }
-    #s9-wolf-slider { width: 240px; accent-color: #6ef06e; }
-    #s9-restart {
-      margin-left: auto; font-family: Georgia, serif; font-style: italic; font-size: 18px;
-      color: #fff; background: transparent; border: 1px solid rgba(255,255,255,0.5);
-      padding: 8px 22px; border-radius: 5px; cursor: pointer;
-    }
-    #s9-restart:hover { background: rgba(255,255,255,0.1); }
-    svg.causal-arrows { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
   </style>
   <script src="ecosystem.js"></script>
   <script src="trees.js"></script>
 </head>
 <body>
+
+<audio id="bgMusic" src="audio/music.mp3" loop></audio>
 
 <div id="fade-overlay"></div>
 
@@ -544,6 +508,8 @@
   activeLayout = s1Layout;
   window.addEventListener('resize', s1Layout);
   s1Layout();
+
+  const music = document.getElementById('bgMusic'); music.volume = 0.25; music.play().catch(()=>{ document.addEventListener('click', ()=>music.play(), {once:true}); });
 
   setTimeout(() => { line1.style.opacity = '1'; }, 100);           // S1 — Line 1 "Yellowstone. 1870s." fades in
   setTimeout(() => { line2.style.opacity = '1'; }, 1300);          // S1 — Line 2 subtitle fades in
@@ -1561,164 +1527,19 @@ scene.addEventListener('click', function goS2() {
       document.getElementById('db-wolf').textContent=effectiveWolves;
     });
 
-    // Outcome button
-    const outBtn=document.createElement('button');
-    outBtn.className='continue-btn'; outBtn.textContent='→ See the full outcome';
-    outBtn.style.bottom='20px'; outBtn.style.top='auto'; outBtn.style.right='24px';
-    scene.appendChild(outBtn);
-    outBtn.addEventListener('click',()=>buildScreen9());
+    // Restart button
+    const restartBtn=document.createElement('button');
+    restartBtn.className='continue-btn'; restartBtn.textContent='↺ Restart';
+    restartBtn.style.bottom='20px'; restartBtn.style.top='auto'; restartBtn.style.right='24px';
+    scene.appendChild(restartBtn);
+    restartBtn.classList.add('show');
+    restartBtn.addEventListener('click',()=>{ location.reload(); });
 
     // Init display
     applyWolfCount(wolfCount0);
   }
 
-  // ── Screen 9 ──────────────────────────────────────────────────────────────────
-  function buildScreen9() {
-    // Full-screen overlay on top of everything
-    const s9=document.createElement('div');
-    s9.id='s9-screen';
-    document.body.appendChild(s9);
 
-    s9.innerHTML=`
-      <div id="s9-title">The Trophic Cascade</div>
-      <div id="s9-subtitle">How one species changed everything</div>
-      <div id="s9-main">
-        <div id="s9-diagram">
-          <svg class="causal-arrows" id="s9-svg"></svg>
-        </div>
-        <div id="s9-fact">
-          <h3 id="s9-fact-title">Click a node</h3>
-          <p id="s9-fact-body">Select any node in the diagram to see real data from Yellowstone's recovery.</p>
-        </div>
-      </div>
-      <div id="s9-bottom">
-        <label style="font-style:italic;font-size:14px;">Wolf population: <span id="s9-wolf-count">14</span></label>
-        <input type="range" id="s9-wolf-slider" min="0" max="28" value="14">
-        <button id="s9-restart">Restart →</button>
-      </div>
-    `;
-
-    document.getElementById('s9-restart').addEventListener('click',()=>{ location.reload(); });
-
-    const facts={
-      'Wolves':         {title:'Wolves',        body:'Reintroduced in 1995. 14 wolves began a chain reaction across the entire ecosystem.'},
-      'Elk population': {title:'Elk population',body:'Fell from 19,000 to 6,100 after wolf reintroduction. But remaining elk were healthier.'},
-      'Elk movement':   {title:'Elk movement',  body:'Wolves created an "ecology of fear" — elk avoided riverbanks where they could be ambushed.'},
-      'Vegetation':     {title:'Vegetation',    body:'Willows and aspens grew 5× their original size within 6 years of wolf reintroduction.'},
-      'River health':   {title:'River health',  body:'Rivers literally changed course as stabilised banks reduced erosion.'},
-      'Beavers':        {title:'Beavers',       body:'From 1 colony in 1995 to 9 colonies by 2023. Beaver dams created new wetland habitats.'},
-      'Biodiversity':   {title:'Biodiversity',  body:'Songbirds, otters, eagles, pronghorn, grizzlies — all recovered after wolves returned.'},
-    };
-
-    const nodeNames=['Wolves','Elk population','Elk movement','Vegetation','River health','Beavers','Biodiversity'];
-    const nodePositions={
-      'Wolves':         {cx:18, cy:40},
-      'Elk population': {cx:35, cy:22},
-      'Elk movement':   {cx:35, cy:58},
-      'Vegetation':     {cx:54, cy:40},
-      'River health':   {cx:72, cy:28},
-      'Beavers':        {cx:72, cy:55},
-      'Biodiversity':   {cx:88, cy:40},
-    };
-
-    const edges=[
-      {from:'Wolves',        to:'Elk population', label:'reduces',        color:'#f06e6e', dashed:false},
-      {from:'Wolves',        to:'Elk movement',   label:'increases',      color:'#6ef06e', dashed:false},
-      {from:'Elk movement',  to:'Vegetation',     label:'allows recovery',color:'#6ef06e', dashed:false},
-      {from:'Elk population',to:'Vegetation',     label:'destroys',       color:'#f06e6e', dashed:false},
-      {from:'Vegetation',    to:'River health',   label:'stabilises',     color:'#6ef06e', dashed:false},
-      {from:'Vegetation',    to:'Beavers',        label:'enables',        color:'#6ef06e', dashed:false},
-      {from:'Beavers',       to:'River health',   label:'improves',       color:'#6ef06e', dashed:false},
-      {from:'River health',  to:'Biodiversity',   label:'supports',       color:'#6ef06e', dashed:false},
-      {from:'Wolves',        to:'Biodiversity',   label:'cascade effect', color:'#6ef06e', dashed:true},
-    ];
-
-    function calcNodeStats(wc) {
-      const elkPop=Math.max(4,Math.round(19000-(wc*900)));
-      const elkMov=wc>=1?Math.round(wc*6):0;
-      const veg=wc>=14?95:wc>=7?60:wc>=1?25:5;
-      const riv=wc>=14?90:wc>=7?55:wc>=1?20:5;
-      const bvr=wc>=7?Math.round((wc-6)*0.8):0;
-      const bio=wc>=14?95:wc>=7?55:wc>=1?20:3;
-      return {'Wolves':wc,'Elk population':elkPop,'Elk movement':elkMov+'%',
-              'Vegetation':veg+'%','River health':riv+'%','Beavers':bvr+' colonies','Biodiversity':bio+'%'};
-    }
-
-    function renderDiagram(wc) {
-      const diag=document.getElementById('s9-diagram');
-      if (!diag) return;
-      const dw=diag.offsetWidth, dh=diag.offsetHeight;
-      if (!dw||!dh) return;
-      const stats=calcNodeStats(wc);
-
-      // Draw SVG arrows
-      const svg=document.getElementById('s9-svg');
-      svg.innerHTML='';
-      svg.setAttribute('width',dw); svg.setAttribute('height',dh);
-      svg.innerHTML=`<defs>
-        <marker id="arr-g" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6ef06e"/></marker>
-        <marker id="arr-r" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f06e6e"/></marker>
-      </defs>`;
-
-      edges.forEach(e=>{
-        const fp=nodePositions[e.from], tp=nodePositions[e.to];
-        const x1=fp.cx/100*dw, y1=fp.cy/100*dh;
-        const x2=tp.cx/100*dw, y2=tp.cy/100*dh;
-        const mx=(x1+x2)/2, my=(y1+y2)/2-30;
-        const isG=e.color==='#6ef06e';
-        const markerId=isG?'arr-g':'arr-r';
-        const pathEl=document.createElementNS('http://www.w3.org/2000/svg','path');
-        pathEl.setAttribute('d',`M${x1},${y1} Q${mx},${my} ${x2},${y2}`);
-        pathEl.setAttribute('fill','none');
-        pathEl.setAttribute('stroke',e.color);
-        pathEl.setAttribute('stroke-width','1.8');
-        if (e.dashed) pathEl.setAttribute('stroke-dasharray','6,4');
-        pathEl.setAttribute('marker-end',`url(#${markerId})`);
-        pathEl.setAttribute('opacity','0.75');
-        svg.appendChild(pathEl);
-        const txtEl=document.createElementNS('http://www.w3.org/2000/svg','text');
-        txtEl.setAttribute('x',String(mx)); txtEl.setAttribute('y',String(my-6));
-        txtEl.setAttribute('fill',e.color); txtEl.setAttribute('font-size','10');
-        txtEl.setAttribute('font-family','Georgia,serif'); txtEl.setAttribute('text-anchor','middle');
-        txtEl.setAttribute('opacity','0.85');
-        txtEl.textContent=e.label;
-        svg.appendChild(txtEl);
-      });
-
-      // Remove old nodes
-      diag.querySelectorAll('.causal-node').forEach(n=>n.remove());
-
-      // Render nodes
-      nodeNames.forEach(name=>{
-        const pos=nodePositions[name];
-        const nd=document.createElement('div');
-        nd.className='causal-node'; nd.dataset.node=name;
-        nd.style.left=`${pos.cx}%`; nd.style.top=`${pos.cy}%`;
-        nd.style.transform='translate(-50%,-50%)';
-        nd.innerHTML=`${name}<span class="node-stat">${stats[name]}</span>`;
-        nd.addEventListener('click',()=>{
-          diag.querySelectorAll('.causal-node').forEach(n=>n.classList.remove('active'));
-          nd.classList.add('active');
-          const f=facts[name];
-          document.getElementById('s9-fact-title').textContent=f.title;
-          document.getElementById('s9-fact-body').textContent=f.body;
-        });
-        diag.appendChild(nd);
-      });
-    }
-
-    // Wire wolf slider
-    const s9sl=document.getElementById('s9-wolf-slider');
-    const s9wc=document.getElementById('s9-wolf-count');
-    s9sl.addEventListener('input',()=>{
-      s9wc.textContent=s9sl.value;
-      renderDiagram(parseInt(s9sl.value));
-    });
-
-    // Initial render after layout
-    setTimeout(()=>renderDiagram(14),100);
-    window.addEventListener('resize',()=>{ setTimeout(()=>renderDiagram(parseInt(s9sl.value)),50); });
-  }
 </script>
 
 </body>
