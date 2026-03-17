@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yellowstone — 1870s</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a0704;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #scene {
+      position: relative;
+      width: 100vw;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    #bg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none; user-select: none;
+    }
+
+    .animal {
+      position: absolute; width: auto;
+      pointer-events: none; user-select: none;
+    }
+
+    .tree-layer {
+      position: absolute; width: auto;
+      pointer-events: none; user-select: none;
+      transition: opacity 0.3s ease;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0px);  }
+      50%       { transform: translateY(-4px); }
+    }
+
+    /* ── Screen 1 narration ─────────────────────────────────────────────── */
+    #narration {
+      position: absolute;
+      top: 110px;
+      left: 0; right: 0;
+      text-align: center;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .n-line {
+      display: block;
+      width: fit-content;
+      margin: 0 auto 10px;
+      background: rgba(0, 0, 0, 0.80);
+      padding: 8px 28px;
+      border-radius: 5px;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    #line1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-weight: normal;
+      font-size: 52px;
+      margin-bottom: 10px;
+    }
+
+    #line2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: normal; font-weight: 300;
+      font-size: 22px; letter-spacing: 0.05em;
+    }
+
+    /* ── Continue button ─────────────────────────────────────────────────── */
+    .continue-btn {
+      position: absolute;
+      top: 120px; right: 44px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-size: 22px;
+      color: #000000;
+      background: none; border: none;
+      padding: 8px 4px;
+      cursor: pointer;
+      opacity: 0; transition: opacity 0.3s ease;
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.6);
+      letter-spacing: 0.04em;
+      z-index: 200;
+    }
+    .continue-btn.show  { opacity: 1; pointer-events: auto; }
+    .continue-btn:hover { opacity: 0.72; }
+
+    /* ── Black transition overlay ────────────────────────────────────────── */
+    #fade-overlay {
+      position: fixed; inset: 0;
+      background: transparent; opacity: 0;
+      pointer-events: none;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
+    }
+
+   
+
+    /* ── Human figures ───────────────────────────────────────────────────── */
+    .human {
+      position: absolute; width: auto;
+      pointer-events: none; user-select: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .human.visible { opacity: 1; }
+
+    /* ── Shared narration container for Screens 2–5 ──────────────────────── */
+    .sN-narration {
+      position: absolute;
+      top: 110px;
+      left: 0; right: 0;
+      height: 0;          /* anchor only; lines overflow visibly */
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .sN-line {
+      position: absolute;
+      top: 0;
+      left: 50%; transform: translateX(-50%);
+      width: max-content; max-width: 78vw;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.80);
+      padding: 8px 28px;
+      border-radius: 5px;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.5);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic;
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+
+    #s2-line1 { font-size: 28px; font-weight: normal; }
+    #s2-line2 { font-size: 36px; font-weight: normal; }
+    #s2-line3 { font-size: 28px; font-weight: normal; }
+    #s3-line1 { font-size: 28px; font-weight: normal; }
+    #s3-line2 { font-size: 28px; font-weight: normal; }
+    #s4-line1 { font-size: 26px; font-weight: normal; }
+    #s4-line2 { font-size: 26px; font-weight: normal; }
+    #s4-line3 { font-size: 26px; font-weight: normal; }
+    #s5-line1 { font-size: 28px; font-weight: normal; }
+    #s5-line2 { font-size: 28px; font-weight: normal; }
+    #s5-line3 { font-size: 28px; font-weight: normal; }
+    #s6-line1 { font-size: 28px; font-weight: normal; }
+    #s6-line2 { font-size: 44px; font-weight: normal; }
+    #s6-line3 { font-size: 28px; font-weight: normal; }
+
+
+
+    /* ── Screen 5+: Full-meadow drying overlay ──────────────────────────── */
+    #dry-overlay {
+      position: absolute; left: 0; right: 0;
+      pointer-events: none; z-index: 8;
+      background: rgba(160, 120, 45, 0.28);
+      opacity: 0; transition: opacity 2.5s ease;
+    }
+
+    /* ── Shared: top dark narration box (Screen 6 picker + Screen 7) ───── */
+    .top-dark-box {
+      position: absolute;
+      top: 110px;
+      left: 50%; transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.80);
+      padding: 16px 28px;
+      border-radius: 8px;
+      text-align: center;
+      z-index: 9999;
+      min-width: 320px;
+      max-width: 82vw;
+    }
+
+    /* ── Screen 6: Wolf picker ───────────────────────────────────────────── */
+    #wolf-picker {
+      pointer-events: auto;
+      opacity: 0; transition: opacity 0.7s ease;
+    }
+    .wp-line3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-size: 26px;
+      color: #ffffff;
+      display: block; margin-bottom: 14px;
+    }
+    .wp-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; margin-bottom: 8px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-size: 19px;
+      color: #ffffff;
+    }
+    #wolf-slider {
+      width: 200px;
+      accent-color: #f5d060;
+      cursor: pointer;
+    }
+    #wolf-count {
+      font-size: 22px; font-weight: bold;
+      min-width: 26px; color: #f5d060;
+    }
+    .wp-note {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-size: 13px;
+      color: rgba(255,255,255,0.60);
+      margin-bottom: 10px;
+    }
+    #release-btn {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-size: 19px;
+      color: #ffffff;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.80);
+      padding: 7px 24px; border-radius: 5px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    #release-btn:hover { background: rgba(255,255,255,0.12); }
+
+    /* ── Screen 7: narration text ────────────────────────────────────────── */
+    #s7-narration { pointer-events: none; }
+    #s7-text {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-size: 26px;
+      color: #ffffff;
+      opacity: 0; transition: opacity 0.3s ease;
+      margin: 0; display: block;
+    }
+
+    /* ── Screen 8: Sandbox slider bar ──────────────────────────────────────────── */
+    #s8-slider-bar {
+      position: absolute;
+      top: 182px; left: 50%; transform: translateX(-50%);
+      width: max-content;
+      background: rgba(0,0,0,0.80);
+      padding: 10px 28px;
+      border-radius: 8px;
+      display: flex; align-items: flex-start; justify-content: center;
+      gap: 40px;
+      z-index: 1001;
+      font-family: Georgia, serif; color: #fff; font-size: 13px;
+      white-space: nowrap;
+    }
+    .s8-slider-group { text-align: center; }
+    .s8-slider-group label { display: block; font-style: italic; margin-bottom: 4px; font-size: 13px; }
+    .s8-slider-group .s8-val { font-size: 18px; font-weight: bold; color: #f5d060; display: block; margin-top: 2px; }
+    .s8-slider-group .s8-sub { font-size: 11px; opacity: 0.65; font-style: italic; margin-top: 2px; }
+    .s8-slider-group input[type=range] { width: 180px; accent-color: #f5d060; }
+
+    /* ── Screen 8: Dashboard ─────────────────────────────────────────────────── */
+    #s8-dashboard {
+      position: absolute;
+      background: rgba(0,0,0,0.60);
+      border-radius: 8px; padding: 12px;
+      z-index: 1002; color: #fff;
+      font-family: Georgia, serif; font-size: 12px;
+      min-width: 140px;
+    }
+    .db-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
+    .db-label { font-style: italic; opacity: 0.8; }
+    .db-val { font-size: 16px; font-weight: bold; }
+    .db-arrow { font-size: 13px; }
+    .db-up { color: #6ef06e; }
+    .db-dn { color: #f06e6e; }
+
+    /* ── Animal tooltip ──────────────────────────────────────────────────────── */
+    .eco-tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.80);
+      color: #fff; border-radius: 6px;
+      padding: 8px 14px; font-family: Georgia, serif;
+      font-style: italic; font-size: 13px;
+      max-width: 220px; text-align: center;
+      pointer-events: none; z-index: 1003;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    /* ── Screen 9: Causal loop ───────────────────────────────────────────────── */
+    #s9-screen {
+      position: fixed; inset: 0;
+      background: #1a1f1a;
+      z-index: 8000; display: flex; flex-direction: column;
+      align-items: center;
+      font-family: Georgia, serif; color: #fff;
+      overflow: hidden;
+    }
+    #s9-title { font-size: 32px; font-style: italic; margin-top: 24px; }
+    #s9-subtitle { font-size: 16px; opacity: 0.65; margin-top: 6px; margin-bottom: 16px; }
+    #s9-main { position: relative; flex: 1; width: 100%; display: flex; }
+    #s9-diagram { position: relative; flex: 1; }
+    #s9-fact {
+      width: 260px; background: rgba(0,0,0,0.45); border-left: 1px solid rgba(255,255,255,0.15);
+      padding: 24px 18px; font-style: italic; font-size: 14px; line-height: 1.6;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #s9-fact h3 { font-size: 18px; font-style: normal; margin-bottom: 4px; color: #a8d8a8; }
+    .causal-node {
+      position: absolute; background: #2d4a2d;
+      border: 1px solid rgba(255,255,255,0.30);
+      border-radius: 8px; padding: 10px 16px;
+      font-size: 13px; text-align: center; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap; user-select: none;
+    }
+    .causal-node:hover, .causal-node.active { background: #3d6b3d; border-color: rgba(255,255,255,0.7); }
+    .causal-node .node-stat { font-size: 11px; color: #a8d8a8; margin-top: 3px; display: block; }
+    #s9-bottom { padding: 12px 24px; display: flex; align-items: center; gap: 24px; width: 100%; background: rgba(0,0,0,0.3); }
+    #s9-wolf-slider { width: 240px; accent-color: #6ef06e; }
+    #s9-restart {
+      margin-left: auto; font-family: Georgia, serif; font-style: italic; font-size: 18px;
+      color: #fff; background: transparent; border: 1px solid rgba(255,255,255,0.5);
+      padding: 8px 22px; border-radius: 5px; cursor: pointer;
+    }
+    #s9-restart:hover { background: rgba(255,255,255,0.1); }
+    svg.causal-arrows { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+  </style>
+  <script src="ecosystem.js"></script>
+  <script src="trees.js"></script>
+</head>
+<body>
+
+<div id="fade-overlay"></div>
+
+<div id="scene">
+  <img id="bg" src="images/background.png?v=2" alt="">
+
+  <div id="narration">
+    <span id="line1" class="n-line">Yellowstone. 1870s.</span>
+    <span id="line2" class="n-line">The most biodiverse valley in North America.</span>
+  </div>
+
+  <button id="continue-btn" class="continue-btn">→ Continue</button>
+</div>
+
+<script>
+  // ── allTrees — reset each screen, populated from trees.js TREE_DATA ──────────
+  let allTrees = [];
+  let _pendingTimers = [];
+  let _onSceneClick = null;
+  function clearTimers() { _pendingTimers.forEach(t => clearTimeout(t)); _pendingTimers = []; }
+  function wait(fn, delay) { const t = setTimeout(fn, delay); _pendingTimers.push(t); return t; }
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('button') || e.target.closest('input')) return;
+    if (_onSceneClick) { const fn = _onSceneClick; _onSceneClick = null; clearTimers(); fn(); }
+  });
+
+  // ── Animal / human data ───────────────────────────────────────────────────────
+  // All positions read from ecosystem.js — edit there to reposition
+  const wolves    = ECOSYSTEM.wolves.slice(0, 5);   // S1 uses first 5
+  const elk       = ECOSYSTEM.elk.slice(0, 8);       // S1 uses first 8
+  const newElkDefs = ECOSYSTEM.elk.slice(8);         // S4+ expanded herd (20 more)
+  const coyoteDefs = ECOSYSTEM.coyotes;
+  const humanDefs = [
+    { src:'images/human-horse.png',   id:'h-horse', xPct: ECOSYSTEM.humans.horse.x,   yPct: ECOSYSTEM.humans.horse.y,   hf: ECOSYSTEM.humans.horse.h   },
+    { src:'images/human-gun.png',     id:'h-gun',   xPct: ECOSYSTEM.humans.gun.x,     yPct: ECOSYSTEM.humans.gun.y,     hf: ECOSYSTEM.humans.gun.h     },
+    { src:'images/human-talking.png', id:'h-talk',  xPct: ECOSYSTEM.humans.talking.x, yPct: ECOSYSTEM.humans.talking.y, hf: ECOSYSTEM.humans.talking.h },
+  ];
+  const s7WolfPositions = ECOSYSTEM.wolves; // all 14 for S7 slide-in
+  const patchDefs = [
+    { x: 04, y: 50, hf: 0.06 },
+    { x: 14, y: 56, hf: 0.12 },
+    { x: 90, y: 50, hf: 0.09 },
+    { x: 34, y: 74, hf: 0.11 },
+    { x: 44, y: 68, hf: 0.10 },
+    { x: 14, y: 84, hf: 0.09 },
+  ];
+
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────────
+  const scene       = document.getElementById('scene');
+  const narration   = document.getElementById('narration');
+  const line1       = document.getElementById('line1');
+  const line2       = document.getElementById('line2');
+  const continueBtn = document.getElementById('continue-btn');
+  const fadeOverlay = document.getElementById('fade-overlay');
+
+  let activeLayout = null;
+
+  // ── Tree helpers ──────────────────────────────────────────────────────────────
+  function addTrees(anchor) {
+    allTrees = [];
+    TREE_DATA.forEach(d => {
+      const el = document.createElement('img');
+      el.src = d.type === 'pine' ? 'images/tree.png' : 'images/tree2.png';
+      el.alt = '';
+      el.classList.add('tree-layer');
+      el.dataset.xPct = d.x;
+      el.dataset.yPct = d.y;
+      el.dataset.hf   = d.h;
+      anchor ? scene.insertBefore(el, anchor) : scene.appendChild(el);
+      allTrees.push({ type: d.type, el });
+    });
+  }
+
+  function layoutTrees(w, h) {
+    allTrees.forEach(({ el }) => {
+      const xPct = parseFloat(el.dataset.xPct);
+      const yPct = parseFloat(el.dataset.yPct);
+      const hf   = parseFloat(el.dataset.hf);
+      el.style.height = `${Math.round(h * hf)}px`;
+      el.style.width  = 'auto';
+      el.style.left   = `${Math.round(w * xPct / 100)}px`;
+      el.style.top    = `${Math.round(h * yPct / 100)}px`;
+      // Trees render 1 z-unit behind animals at same y
+      el.style.zIndex = String(Math.round(yPct * 10) - 1);
+    });
+  }
+
+  // ── Animal helpers ────────────────────────────────────────────────────────────
+  function buildAnimal(src, data, baseHF, globalIndex, insertBefore) {
+    const img = document.createElement('img');
+    img.src = src; img.alt = '';
+    img.classList.add('animal');
+    const duration = (2.0 + Math.random() * 1.0).toFixed(2);
+    const delay    = (globalIndex * 0.28).toFixed(2);
+    img.style.animationName           = 'bob';
+    img.style.animationDuration       = `${duration}s`;
+    img.style.animationDelay          = `${delay}s`;
+    img.style.animationTimingFunction = 'ease-in-out';
+    img.style.animationIterationCount = 'infinite';
+    img.dataset.xPct             = data.x;
+    img.dataset.yPct             = data.y;
+    img.dataset.scale            = data.scale !== undefined ? data.scale : 1.0;
+    img.dataset.baseHeightFactor = baseHF !== undefined ? baseHF : (data.h || 0.10);
+    insertBefore ? scene.insertBefore(img, insertBefore) : scene.appendChild(img);
+    return img;
+  }
+
+  function layoutAnimals(animals, w, h) {
+    animals.forEach(img => {
+      const xPct  = parseFloat(img.dataset.xPct);
+      const yPct  = parseFloat(img.dataset.yPct);
+      const scale = parseFloat(img.dataset.scale);
+      const baseH = parseFloat(img.dataset.baseHeightFactor);
+      img.style.height = `${Math.round(h * baseH * scale)}px`;
+      img.style.width  = 'auto';
+      img.style.left   = `${Math.round(w * xPct / 100)}px`;
+      img.style.top    = `${Math.round(h * yPct / 100)}px`;
+      img.style.zIndex = String(Math.round(yPct * 10));
+    });
+  }
+
+  // ── Transition helper ─────────────────────────────────────────────────────────
+  function doTransition(buildFn) {
+    fadeOverlay.style.transition = 'opacity 0.2s ease';
+    fadeOverlay.style.opacity = '0';
+    fadeOverlay.style.pointerEvents = 'auto';
+    setTimeout(() => {
+      if (activeLayout) window.removeEventListener('resize', activeLayout);
+      buildFn();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        fadeOverlay.style.transition = 'opacity 0.2s ease';
+        fadeOverlay.style.opacity = '0';
+        setTimeout(() => { fadeOverlay.style.pointerEvents = 'none'; }, 500);
+      }));
+    }, 300);
+  }
+
+  // ── buildBaseScene — shared scaffold for Screens 2–5 ─────────────────────────
+  function buildBaseScene(narId, humanVisible) {
+    scene.innerHTML = '';
+
+    const bg = document.createElement('img');
+    bg.id = 'bg'; bg.src = 'images/background.png?v=2'; bg.alt = '';
+    scene.appendChild(bg);
+
+    const skyOv = document.createElement('div');
+    skyOv.id = 'sky-overlay';
+    scene.appendChild(skyOv);
+
+    // Narration anchor — trees and animals insert before this
+    const narDiv = document.createElement('div');
+    narDiv.id = narId;
+    narDiv.className = 'sN-narration';
+    scene.appendChild(narDiv);
+
+    // Trees before animals (z-index handles layering)
+    addTrees(narDiv);
+
+    const elkEls = elk.map((d, i) =>
+      buildAnimal('images/elk.png', d, 0.10, wolves.length + i, narDiv)
+    );
+
+    const humanEls = humanDefs.map((d, i) => {
+      const img = document.createElement('img');
+      img.src = d.src; img.alt = ''; img.id = d.id;
+      img.classList.add('human');
+      img.dataset.xPct = d.xPct; img.dataset.yPct = d.yPct; img.dataset.hf = d.hf;
+      const dur = (2.0 + Math.random() * 1.0).toFixed(2);
+      img.style.animationName           = 'bob';
+      img.style.animationDuration       = `${dur}s`;
+      img.style.animationDelay          = `${(i * 0.4).toFixed(2)}s`;
+      img.style.animationTimingFunction = 'ease-in-out';
+      img.style.animationIterationCount = 'infinite';
+      if (humanVisible) img.classList.add('visible');
+      scene.insertBefore(img, narDiv);
+      return img;
+    });
+
+    return { skyOv, narDiv, elkEls, humanEls };
+  }
+
+  function layoutHumans(humanEls) {
+    const w = window.innerWidth;
+    const h = Math.round(w * 9 / 16);
+    humanEls.forEach(img => {
+      img.style.height = `${Math.round(h * parseFloat(img.dataset.hf))}px`;
+      img.style.width  = 'auto';
+      img.style.left   = `${Math.round(w * parseFloat(img.dataset.xPct) / 100)}px`;
+      img.style.top    = `${Math.round(h * parseFloat(img.dataset.yPct) / 100)}px`;
+      img.style.zIndex = String(Math.round(parseFloat(img.dataset.yPct) * 10));
+    });
+  }
+
+  // ── Screen 1 ──────────────────────────────────────────────────────────────────
+  addTrees(narration);
+
+  const wolfEls = wolves.map((d, i) =>
+    buildAnimal('images/wolf.png', d, 0.085, i, narration)
+  );
+  const elkEls = elk.map((d, i) =>
+    buildAnimal('images/elk.png', d, 0.10, wolves.length + i, narration)
+  );
+  const s1Animals = [...wolfEls, ...elkEls];
+
+  function s1Layout() {
+    const w = window.innerWidth;
+    const h = Math.round(w * 9 / 16);
+    scene.style.height = `${h}px`;
+    layoutTrees(w, h);
+    layoutAnimals(s1Animals, w, h);
+  }
+  activeLayout = s1Layout;
+  window.addEventListener('resize', s1Layout);
+  s1Layout();
+
+  setTimeout(() => { line1.style.opacity = '1'; }, 100);           // S1 — Line 1 "Yellowstone. 1870s." fades in
+  setTimeout(() => { line2.style.opacity = '1'; }, 1300);          // S1 — Line 2 subtitle fades in
+  setTimeout(() => { continueBtn.classList.add('show'); }, 1400);  // S1 — Continue button appears
+scene.addEventListener('click', function goS2() {
+  scene.removeEventListener('click', goS2);
+  doTransition(buildScreen2);
+});
+  continueBtn.addEventListener('click', () => doTransition(buildScreen2));
+
+  // ── Screen 2 ──────────────────────────────────────────────────────────────────
+  function buildScreen2() {
+    const { skyOv, narDiv, elkEls: s2Elk, humanEls } = buildBaseScene('s2-narration', false);
+
+    narDiv.innerHTML = `
+      <span id="s2-line1" class="sN-line">For thousands of years, wolves kept this valley in balance.</span>
+      <span id="s2-line2" class="sN-line">Then humans decided they were a threat.</span>
+      <span id="s2-line3" class="sN-line">Ranchers feared for their livestock. The US government agreed.</span>
+    `;
+
+    const s2Wolves = wolves.map((d, i) =>
+      buildAnimal('images/wolf.png', d, 0.085, i, narDiv)
+    );
+    const s2Animals = [...s2Wolves, ...s2Elk];
+
+    const s2Btn = document.createElement('button');
+    s2Btn.className = 'continue-btn';
+    s2Btn.textContent = '→ Continue';
+    scene.appendChild(s2Btn);
+
+    function s2Layout() {
+      const w = window.innerWidth;
+      const h = Math.round(w * 9 / 16);
+      scene.style.height = `${h}px`;
+      layoutTrees(w, h);
+      layoutAnimals(s2Animals, w, h);
+      layoutHumans(humanEls);
+    }
+    activeLayout = s2Layout;
+    window.addEventListener('resize', s2Layout);
+    s2Layout();
+
+    const s2L1 = document.getElementById('s2-line1');
+    const s2L2 = document.getElementById('s2-line2');
+    const s2L3 = document.getElementById('s2-line3');
+    const hHorse = document.getElementById('h-horse');
+    const hGun   = document.getElementById('h-gun');
+    const hTalk  = document.getElementById('h-talk');
+
+    setTimeout(() => { skyOv.style.opacity = '1'; }, 600);                                       // S2 — Sky darkens
+    setTimeout(() => { s2L1.style.opacity = '1'; }, 900);                                        // S2 — Line 1 "For thousands of years, wolves kept balance" fades in
+    setTimeout(() => { s2L1.style.opacity = '0'; }, 2650);                                       // S2 — Line 1 fades out
+    setTimeout(() => { s2L2.style.opacity = '1'; hHorse.classList.add('visible'); }, 2650);      // S2 — Line 2 "humans decided they were a threat" + horse rider appear
+    setTimeout(() => { s2L2.style.opacity = '0'; }, 4400);                                       // S2 — Line 2 fades out
+    setTimeout(() => { s2L3.style.opacity = '1'; hGun.classList.add('visible'); }, 4400);        // S2 — Line 3 "Ranchers feared..." + hunter with gun appear
+    setTimeout(() => { hTalk.classList.add('visible'); }, 4900);                                  // S2 — Talking human figure appears
+    setTimeout(() => { s2Btn.classList.add('show'); }, 4900);                                     // S2 — Continue button appears
+    s2Btn.addEventListener('click', () => doTransition(buildScreen3));
+  }
+
+  // ── Screen 3 ──────────────────────────────────────────────────────────────────
+  function buildScreen3() {
+    const { skyOv, narDiv, elkEls: s3Elk, humanEls } = buildBaseScene('s3-narration', true);
+
+    narDiv.innerHTML = `
+      <span id="s3-line1" class="sN-line">By 1926, every wolf in Yellowstone had been hunted down.</span>
+      <span id="s3-line2" class="sN-line">The last apex predator was gone. The valley would never be the same.</span>
+    `;
+
+    const s3Wolves = wolves.map((d, i) =>
+      buildAnimal('images/wolf.png', d, 0.085, i, narDiv)
+    );
+    s3Wolves.forEach(w => { w.style.transition = 'opacity 0.2s ease'; });
+
+    const hunterDefs = [
+      { xPct: 22.5, yPct: 30, hf: 0.09 },
+      { xPct: 26.0, yPct: 33, hf: 0.085 },
+    ];
+    const hunterEls = hunterDefs.map((d, i) => {
+      const img = document.createElement('img');
+      img.src = 'images/human-gun.png'; img.alt = '';
+      img.classList.add('human');
+      img.dataset.xPct = d.xPct; img.dataset.yPct = d.yPct; img.dataset.hf = d.hf;
+      const dur = (2.0 + Math.random() * 1.0).toFixed(2);
+      img.style.animationName           = 'bob';
+      img.style.animationDuration       = `${dur}s`;
+      img.style.animationDelay          = `${(i * 0.35).toFixed(2)}s`;
+      img.style.animationTimingFunction = 'ease-in-out';
+      img.style.animationIterationCount = 'infinite';
+      scene.insertBefore(img, narDiv);
+      return img;
+    });
+
+    const s3Animals = [...s3Wolves, ...s3Elk];
+
+    const s3Btn = document.createElement('button');
+    s3Btn.className = 'continue-btn';
+    s3Btn.textContent = '→ Continue';
+    scene.appendChild(s3Btn);
+
+    function s3Layout() {
+      const w = window.innerWidth;
+      const h = Math.round(w * 9 / 16);
+      scene.style.height = `${h}px`;
+      layoutTrees(w, h);
+      layoutAnimals(s3Animals, w, h);
+      layoutHumans(humanEls);
+      hunterEls.forEach(img => {
+        img.style.height = `${Math.round(h * parseFloat(img.dataset.hf))}px`;
+        img.style.width  = 'auto';
+        img.style.left   = `${Math.round(w * parseFloat(img.dataset.xPct) / 100)}px`;
+        img.style.top    = `${Math.round(h * parseFloat(img.dataset.yPct) / 100)}px`;
+        img.style.zIndex = String(Math.round(parseFloat(img.dataset.yPct) * 10));
+      });
+    }
+    activeLayout = s3Layout;
+    window.addEventListener('resize', s3Layout);
+    s3Layout();
+
+    const s3L1 = document.getElementById('s3-line1');
+    const s3L2 = document.getElementById('s3-line2');
+
+    setTimeout(() => { skyOv.style.opacity = '1'; }, 300);        // S3 — Sky darkens
+    setTimeout(() => {
+      s3L1.style.opacity = '1';
+      hunterEls.forEach(h => h.classList.add('visible'));
+    }, 900);                                                        // S3 — Line 1 "By 1926, every wolf...hunted down" + hunters appear
+
+    s3Wolves.forEach((wolfImg, i) => {
+      setTimeout(() => { wolfImg.style.opacity = '0'; }, 1900 + i * 900);  // S3 — Wolf fades out one by one (shot by hunters)
+    });
+
+    const lastWolfDone = 1900 + (s3Wolves.length - 1) * 900 + 800;
+    const line2In      = lastWolfDone + 1000;
+
+    setTimeout(() => { s3L1.style.opacity = '0'; }, line2In);                  // S3 — Line 1 fades out
+    setTimeout(() => { s3L2.style.opacity = '1'; }, line2In);                  // S3 — Line 2 "The last apex predator was gone" fades in
+    setTimeout(() => { s3Btn.classList.add('show'); }, line2In + 3000);         // S3 — Continue button appears
+    s3Btn.addEventListener('click', () => doTransition(buildScreen4));
+  }
+
+  // ── Screen 4 ──────────────────────────────────────────────────────────────────
+  function buildScreen4() {
+    const { skyOv, narDiv, elkEls: s4InitialElk, humanEls } = buildBaseScene('s4-narration', true);
+
+    narDiv.innerHTML = `
+      <span id="s4-line1" class="sN-line">Without wolves, the elk population exploded — from 5,000 to nearly 20,000.</span>
+      <span id="s4-line2" class="sN-line">They stopped moving. They grazed the riverbanks bare, stripping willows and aspens down to nothing.</span>
+      <span id="s4-line3" class="sN-line">With no wolves to keep them in check, coyotes became the new top predator but they were poor at the job.</span>
+    `;
+
+    const newElkEls = newElkDefs.map((d, i) => {
+      const img = buildAnimal('images/elk.png', d, 0.10, elk.length + i, narDiv);
+      img.style.opacity    = '0';
+      img.style.transition = 'opacity 0.2s ease';
+      return img;
+    });
+
+    const grassOv = document.createElement('div');
+    grassOv.id = 'grass-overlay';
+    scene.insertBefore(grassOv, narDiv);
+
+    const coyoteEls = coyoteDefs.map((d, i) => {
+      const img = buildAnimal('images/coyote.png', d, 0.07, 100 + i, narDiv);
+      img.style.opacity    = '0';
+      img.style.transition = 'opacity 0.2s ease';
+      img.style.transform  = 'scaleX(-1)';
+      return img;
+    });
+
+    const s4AllAnimals = [...s4InitialElk, ...newElkEls, ...coyoteEls];
+
+    const s4Btn = document.createElement('button');
+    s4Btn.className   = 'continue-btn';
+    s4Btn.textContent = '→ Continue';
+    scene.appendChild(s4Btn);
+
+    function s4Layout() {
+      const w = window.innerWidth;
+      const h = Math.round(w * 9 / 16);
+      scene.style.height = `${h}px`;
+      layoutTrees(w, h);
+      layoutAnimals(s4AllAnimals, w, h);
+      layoutHumans(humanEls);
+      grassOv.style.top    = `${Math.round(h * 0.58)}px`;
+      grassOv.style.height = `${Math.round(h * 0.42)}px`;
+    }
+    activeLayout = s4Layout;
+    window.addEventListener('resize', s4Layout);
+    s4Layout();
+
+    const s4L1 = document.getElementById('s4-line1');
+    const s4L2 = document.getElementById('s4-line2');
+    const s4L3 = document.getElementById('s4-line3');
+
+    setTimeout(() => { skyOv.style.opacity = '1'; }, 200);                                          // S4 — Sky darkens
+    setTimeout(() => { humanEls.forEach(h => h.classList.remove('visible')); }, 400);                // S4 — Human figures hide (hunters are gone)
+    setTimeout(() => { s4L1.style.opacity = '1'; }, 900);                                            // S4 — Line 1 "elk population exploded" fades in
+    newElkEls.forEach((img, i) => {
+      setTimeout(() => { img.style.opacity = '1'; }, 1500 + i * 300);                                // S4 — New elk fades in one by one (herd expansion)
+    });
+    setTimeout(() => { grassOv.style.opacity = '1'; }, 2500);                                        // S4 — Grass overgrowth overlay appears (overgrazing)
+    setTimeout(() => { s4L1.style.opacity = '0'; s4L2.style.opacity = '1'; }, 4900);                 // S4 — Line 1 out, Line 2 "grazed the riverbanks bare" in
+    coyoteEls.forEach((img, i) => {
+      setTimeout(() => { img.style.opacity = '1'; }, 5500 + i * 500);                                // S4 — Coyote fades in one by one (new top predator)
+    });
+    setTimeout(() => { s4L2.style.opacity = '0'; s4L3.style.opacity = '1'; }, 8900);                 // S4 — Line 2 out, Line 3 "coyotes became top predator" in
+    setTimeout(() => { s4Btn.classList.add('show'); }, 11900);                                        // S4 — Continue button appears
+    s4Btn.addEventListener('click', () => doTransition(buildScreen5));
+  }
+
+  // ── Shared helper: bare soil patch images (Screens 5 & 6) ───────────────────
+  function buildPatches(anchor, startVisible) {
+    return patchDefs.map(p => {
+      const img = document.createElement('img');
+      img.src = 'images/patch.png'; img.alt = '';
+      img.style.position  = 'absolute';
+      img.style.width     = 'auto';
+      img.style.pointerEvents = 'none';
+      img.style.userSelect    = 'none';
+      img.style.opacity       = startVisible ? '1' : '0';
+      img.style.transition    = 'opacity 0.2s ease';
+      img.dataset.xPct = p.x; img.dataset.yPct = p.y; img.dataset.hf = p.hf;
+      img.style.zIndex = '9';
+      scene.insertBefore(img, anchor);
+      return img;
+    });
+  }
+
+  function layoutPatches(patchEls, w, h) {
+    patchEls.forEach(img => {
+      const ph = Math.round(h * parseFloat(img.dataset.hf));
+      img.style.height = `${ph}px`;
+      img.style.left   = `${Math.round(w * parseFloat(img.dataset.xPct) / 100)}px`;
+      img.style.top    = `${Math.round(h * parseFloat(img.dataset.yPct) / 100)}px`;
+    });
+  }
+
+  // ── Screen 5 ──────────────────────────────────────────────────────────────────
+  function buildScreen5() {
+    const { skyOv, narDiv, elkEls: s5InitialElk } = buildBaseScene('s5-narration', false);
+
+    narDiv.innerHTML = `
+      <span id="s5-line1" class="sN-line">With no wolves to hold them back, the elk grazed the hillsides until the trees began to vanish.</span>
+      <span id="s5-line2" class="sN-line">Decades of overgrazing stripped the land bare. The great forests of Yellowstone were disappearing.</span>
+      <span id="s5-line3" class="sN-line">Without tree roots to hold the soil, the riverbanks began to erode — bare patches spreading across the valley floor.</span>
+    `;
+
+    // All 28 elk visible
+    const s5ExtraElk = newElkDefs.map((d, i) => {
+      const img = buildAnimal('images/elk.png', d, 0.10, elk.length + i, narDiv);
+      img.style.opacity = '1';
+      return img;
+    });
+
+    // 3 coyotes visible
+    const s5Coyotes = coyoteDefs.map((d, i) => {
+      const img = buildAnimal('images/coyote.png', d, 0.07, 100 + i, narDiv);
+      img.style.transform = 'scaleX(-1)';
+      img.style.opacity   = '1';
+      return img;
+    });
+
+    // Bare soil patches — appear one by one after deforestation begins
+    const patchEls = buildPatches(narDiv, false);
+
+    const s5AllAnimals = [...s5InitialElk, ...s5ExtraElk, ...s5Coyotes];
+
+    const s5Btn = document.createElement('button');
+    s5Btn.className   = 'continue-btn';
+    s5Btn.textContent = '→ Continue';
+    scene.appendChild(s5Btn);
+
+    function s5Layout() {
+      const w = window.innerWidth;
+      const h = Math.round(w * 9 / 16);
+      scene.style.height = `${h}px`;
+      layoutTrees(w, h);
+      layoutAnimals(s5AllAnimals, w, h);
+      layoutPatches(patchEls, w, h);
+    }
+    activeLayout = s5Layout;
+    window.addEventListener('resize', s5Layout);
+    s5Layout();
+
+    const s5L1 = document.getElementById('s5-line1');
+    const s5L2 = document.getElementById('s5-line2');
+    const s5L3 = document.getElementById('s5-line3');
+
+    setTimeout(() => { skyOv.style.opacity = '1'; }, 200);        // S5 — Sky darkens
+    setTimeout(() => { s5L1.style.opacity = '1'; }, 900);         // S5 — Line 1 "elk grazed the hillsides until trees vanished" fades in
+
+    // After Line 1: grassland trees fade out
+    setTimeout(() => {
+      allTrees.filter(t => t.type === 'grassland').forEach(({ el }) => {
+        el.style.transition = 'opacity 1.5s ease';
+        el.style.opacity = '0';
+      });
+    }, 1400);                                                       // S5 — Grassland trees fade out (overgrazing begins)
+
+    const line2At = 4900;
+    setTimeout(() => { s5L1.style.opacity = '0'; s5L2.style.opacity = '1'; }, line2At);  // S5 — Line 1 out, Line 2 "Decades of overgrazing" in
+
+    // After Line 2: pine trees fade out right→left in groups of 10
+    const deforestStart = line2At + 100;
+    setTimeout(() => {
+      const pineTrees = allTrees
+        .filter(t => t.type === 'pine')
+        .slice()
+        .sort((a, b) => parseFloat(b.el.dataset.xPct) - parseFloat(a.el.dataset.xPct));
+      const groupCount = Math.ceil(pineTrees.length / 10);
+      for (let g = 0; g < groupCount; g++) {
+        const group = pineTrees.slice(g * 10, g * 10 + 10);
+        setTimeout(() => {
+          group.forEach(({ el }) => {
+            el.style.transition = 'opacity 1.0s ease';
+            el.style.opacity = '0';
+          });
+        }, g * 600);                                                // S5 — Pine tree group fades out (deforestation wave right→left)
+      }
+    }, deforestStart);                                              // S5 — Deforestation starts: pine trees fade out in groups
+
+    // Patches appear one by one partway through deforestation
+    const patchStart = deforestStart + 3000;
+    patchEls.forEach((img, i) => {
+      setTimeout(() => { img.style.opacity = '1'; }, patchStart + i * 700);  // S5 — Bare soil patch appears one by one (erosion spreading)
+    });
+
+    // Line 3 after all patches are visible
+    const line3At = patchStart + patchEls.length * 700 + 400;
+    setTimeout(() => { s5L2.style.opacity = '0'; s5L3.style.opacity = '1'; }, line3At);  // S5 — Line 2 out, Line 3 "riverbanks erode" in
+
+    setTimeout(() => { s5Btn.classList.add('show'); }, line3At + 3000);                   // S5 — Continue button appears
+    s5Btn.addEventListener('click', () => doTransition(buildScreen6));
+  }
+
+  // ── Screen 6 ──────────────────────────────────────────────────────────────────
+  function buildScreen6() {
+    const { skyOv, narDiv, elkEls: s6InitialElk } = buildBaseScene('s6-narration', false);
+
+    narDiv.innerHTML = `
+      <span id="s6-line1" class="sN-line">1995. After 70 years, scientists made a radical proposal.</span>
+      <span id="s6-line2" class="sN-line">Bring the wolves back.</span>
+    `;
+
+    // All 28 elk visible immediately
+    const s6ExtraElk = newElkDefs.map((d, i) => {
+      const img = buildAnimal('images/elk.png', d, 0.10, elk.length + i, narDiv);
+      img.style.opacity = '1';
+      return img;
+    });
+
+    // 3 coyotes visible
+    const s6Coyotes = coyoteDefs.map((d, i) => {
+      const img = buildAnimal('images/coyote.png', d, 0.07, 100 + i, narDiv);
+      img.style.transform = 'scaleX(-1)';
+      img.style.opacity   = '1';
+      return img;
+    });
+
+    // Bare soil patches already visible (carried from S5)
+    const patchEls = buildPatches(narDiv, true);
+
+    // Trees already deforested — add but keep invisible
+    allTrees.forEach(({ el }) => { el.style.opacity = '0'; });
+
+    const s6AllAnimals = [...s6InitialElk, ...s6ExtraElk, ...s6Coyotes];
+
+    // Wolf picker — top dark box, contains line 3 + slider + button
+    const wolfPicker = document.createElement('div');
+    wolfPicker.id = 'wolf-picker';
+    wolfPicker.className = 'top-dark-box';
+    wolfPicker.innerHTML = `
+      <span class="wp-line3">But how many? That decision would change everything.</span>
+      <div class="wp-row">
+        <span>🐺 Wolves to reintroduce:</span>
+        <input type="range" id="wolf-slider" min="0" max="14" value="7">
+        <span id="wolf-count">7</span>
+      </div>
+      <p class="wp-note">In 1995, scientists released 14 wolves.</p>
+      <button id="release-btn">Release the wolves →</button>
+    `;
+    scene.appendChild(wolfPicker);
+
+    // Wire up slider and release button
+    const slider     = wolfPicker.querySelector('#wolf-slider');
+    const countEl    = wolfPicker.querySelector('#wolf-count');
+    const releaseBtn = wolfPicker.querySelector('#release-btn');
+    slider.addEventListener('input', () => { countEl.textContent = slider.value; });
+    releaseBtn.addEventListener('click', () => {
+      window.wolvesChosen = parseInt(slider.value);
+      doTransition(() => buildScreen7(window.wolvesChosen));
+    });
+
+    function s6Layout() {
+      const w = window.innerWidth;
+      const h = Math.round(w * 9 / 16);
+      scene.style.height = `${h}px`;
+      layoutAnimals(s6AllAnimals, w, h);
+      layoutPatches(patchEls, w, h);
+    }
+    activeLayout = s6Layout;
+    window.addEventListener('resize', s6Layout);
+    s6Layout();
+
+    const s6L1 = document.getElementById('s6-line1');
+    const s6L2 = document.getElementById('s6-line2');
+
+    setTimeout(() => { skyOv.style.opacity = '1'; }, 200);                                           // S6 — Sky darkens
+    setTimeout(() => { s6L1.style.opacity = '1'; }, 900);                                             // S6 — Line 1 "1995. After 70 years, radical proposal" fades in
+    setTimeout(() => { s6L1.style.opacity = '0'; s6L2.style.opacity = '1'; }, 4400);                  // S6 — Line 1 out, Line 2 "Bring the wolves back" fades in
+    setTimeout(() => { s6L2.style.opacity = '0'; wolfPicker.style.opacity = '1'; }, 7900);            // S6 — Line 2 out, wolf count picker/slider appears
+  }
+
+  // ── Screen 7 ──────────────────────────────────────────────────────────────────
+  function buildScreen7(wolvesChosen) {
+    scene.innerHTML = '';
+
+    const bg = document.createElement('img');
+    bg.id = 'bg'; bg.src = 'images/background.png?v=2'; bg.alt = '';
+    scene.appendChild(bg);
+
+    const skyOv = document.createElement('div');
+    skyOv.id = 'sky-overlay'; skyOv.style.opacity = '1';
+    scene.appendChild(skyOv);
+
+    const narBox = document.createElement('div');
+    narBox.id = 's7-narration'; narBox.className = 'top-dark-box';
+    narBox.innerHTML = '<p id="s7-text"></p>';
+    scene.appendChild(narBox);
+
+    // Muddy ground — visible (from S5/S6)
+    const muddyOv = document.createElement('div');
+    muddyOv.id = 'muddy-ov';
+    muddyOv.style.cssText = `position:absolute;left:0;right:0;pointer-events:none;z-index:8;
+      background:${ECOSYSTEM.muddyPatch.color};opacity:1;transition:opacity 3.5s ease;`;
+    scene.appendChild(muddyOv);
+
+    // Trees — start invisible
+    addTrees(narBox);
+    allTrees.forEach(({el}) => { el.style.opacity='0'; el.style.transition='opacity 1.0s ease'; });
+
+    // 28 elk
+    const s7InitialElk = elk.map((d,i) => buildAnimal('images/elk.png', d, d.h||0.10, i, narBox));
+    const s7ExtraElk   = newElkDefs.map((d,i) => {
+      const img = buildAnimal('images/elk.png', d, d.h||0.10, elk.length+i, narBox);
+      img.style.opacity = '1'; return img;
+    });
+    const s7ElkEls = [...s7InitialElk, ...s7ExtraElk];
+
+    // 3 coyotes
+    const s7Coyotes = coyoteDefs.map((d,i) => {
+      const img = buildAnimal('images/coyote.png', d, d.h||0.07, 100+i, narBox);
+      img.style.transform='scaleX(-1)'; img.style.opacity='1'; return img;
+    });
+
+    // Patches
+    const patchEls = buildPatches(narBox, true);
+
+    // Wolves (built invisible, slide in from left on paths B-E)
+    const wolvesToShow = Math.min(wolvesChosen, s7WolfPositions.length);
+    const s7WolfEls = [];
+    for (let i=0; i<wolvesToShow; i++) {
+      const d = s7WolfPositions[i];
+      const img = buildAnimal('images/wolf.png', d, d.h||0.085, i, narBox);
+      img.style.opacity='0'; s7WolfEls.push(img);
+    }
+
+    // Outcome button
+    const s7Btn = document.createElement('button');
+    s7Btn.className='continue-btn'; s7Btn.textContent='→ See the outcome';
+    scene.appendChild(s7Btn);
+    s7Btn.addEventListener('click', () => buildScreen8());
+
+    // Narration helper
+    function showText(text, size) {
+      const el = document.getElementById('s7-text');
+      if (!el) return;
+      el.style.transition='opacity 0.2s ease'; el.style.opacity='0';
+      setTimeout(() => {
+        el.textContent=text; el.style.fontSize=size||'26px';
+        el.style.transition='opacity 1.0s ease'; el.style.opacity='1';
+      }, 700);
+    }
+
+    // Layout
+    let wolvesArrived = false;
+    const s7AllForLayout = [...s7ElkEls, ...s7Coyotes, ...s7WolfEls];
+    function s7Layout() {
+      const w=window.innerWidth, h=Math.round(w*9/16);
+      scene.style.height=`${h}px`;
+      muddyOv.style.top=ECOSYSTEM.muddyPatch.top;
+      muddyOv.style.height=ECOSYSTEM.muddyPatch.height;
+      layoutTrees(w,h); layoutAnimals(s7AllForLayout,w,h); layoutPatches(patchEls,w,h);
+      if (!wolvesArrived) {
+        s7WolfEls.forEach(img => {
+          img.dataset.targetLeft=img.style.left;
+          img.style.transition='none';
+          img.style.left=`${-Math.round(w*0.08)}px`;
+        });
+      }
+    }
+    activeLayout=s7Layout;
+    window.addEventListener('resize', s7Layout);
+    s7Layout();
+
+    // Wolf slide-in helper
+    function slideWolvesIn(count) {
+      const toShow = s7WolfEls.slice(0, count);
+      toShow.forEach((img,i) => {
+        setTimeout(() => {
+          img.style.transition='left 2.0s ease, opacity 1.0s ease';
+          img.style.left=img.dataset.targetLeft;
+          img.style.opacity='1';
+        }, 200 + i*250);
+      });
+      const doneAt = 200 + Math.max(0,count-1)*250 + 2000;
+      setTimeout(() => { wolvesArrived=true; }, doneAt);
+      return doneAt;
+    }
+
+    // Scientist's choice badge helper
+    function showScientistBadge() {
+      const badge = document.createElement('div');
+      badge.style.cssText=`position:absolute;top:14px;right:18px;z-index:9999;
+        font-family:Georgia,serif;font-style:italic;font-size:14px;
+        color:#6ef06e;opacity:0;transition:opacity 0.5s ease;pointer-events:none;`;
+      badge.textContent='✓ Scientist\'s choice (1995)';
+      scene.appendChild(badge);
+      setTimeout(()=>{badge.style.opacity='1';},300);               // S7 — "Scientist's choice (1995)" badge fades in
+    }
+
+    // Line 1 — shared opener
+    setTimeout(()=>{ showText('1995. The gates open.','28px'); },500);  // S7 — Opening narration "1995. The gates open." appears (all paths)
+
+    // ── PATH A: 0 wolves ──────────────────────────────────────────────────────
+    if (wolvesChosen===0) {
+      setTimeout(()=>{ showText('No wolves were released. The scientists\' proposal was rejected.','26px'); },3500);  // S7A — Narration: proposal rejected
+      setTimeout(()=>{ showText('Without wolves, the elk continued to multiply unchecked.','26px'); },7000);           // S7A — Narration: elk multiply unchecked
+      // 8 more elk fade in
+      const extraElkA = newElkDefs.slice(0,8).map((d,i)=>{
+        const img=buildAnimal('images/elk.png',d,d.h||0.10,200+i,s7Btn);
+        img.style.opacity='0'; img.style.transition='opacity 0.2s ease'; return img;
+      });
+      const w=window.innerWidth,h=Math.round(w*9/16);
+      layoutAnimals(extraElkA,w,h);
+      extraElkA.forEach((img,i)=>setTimeout(()=>{img.style.opacity='1';},7500+i*300));  // S7A — Extra elk fades in one by one (herd overgrowth)
+      setTimeout(()=>{ showText('Year by year, the valley deteriorated further. The river shrank. The forests never returned.','24px'); },11000);  // S7A — Narration: valley deterioration
+      const darkOv=document.createElement('div');
+      darkOv.style.cssText='position:absolute;left:0;right:0;top:52%;height:48%;pointer-events:none;z-index:9;background:rgba(140,100,30,0.38);opacity:0;transition:opacity 2.5s ease;';
+      scene.appendChild(darkOv);
+      setTimeout(()=>{ darkOv.style.opacity='1'; },11200);                               // S7A — Dark ground overlay appears (valley deterioration)
+      setTimeout(()=>{ showText('By 2010, Yellowstone was a shadow of what it once was.','26px'); },15000);   // S7A — Narration: Yellowstone 2010 shadow
+      setTimeout(()=>{ s7Btn.classList.add('show'); },18500);                             // S7A — Continue button appears
+      return;
+    }
+
+    // ── PATH B: 1–6 wolves ────────────────────────────────────────────────────
+    if (wolvesChosen>=1 && wolvesChosen<=6) {
+      setTimeout(()=>{ showText(`Only ${wolvesChosen} wolf${wolvesChosen>1?'s were':' was'} released. Too few to form stable packs.`,'26px'); },3500);  // S7B — Narration: too few wolves
+      const arrivedAt=slideWolvesIn(wolvesChosen)+3500;
+      setTimeout(()=>{ showText('The elk barely noticed. The herds kept grazing.','26px'); },arrivedAt+500);   // S7B — Narration: elk barely moved
+      // 4 elk fade out slowly
+      setTimeout(()=>{
+        s7ElkEls.slice(0,4).forEach(img=>{
+          img.style.transition='opacity 1.5s ease'; img.style.opacity='0';
+        });
+      },arrivedAt+1000);                                                                                        // S7B — 4 elk fade out (minor reduction from wolves)
+      setTimeout(()=>{ showText('A partial effort. The cascade never fully began.','26px'); },arrivedAt+5000); // S7B — Narration: partial effort
+      // 20% trees + patches fade out
+      const pineSet=allTrees.filter(t=>t.type==='pine');
+      const show20=pineSet.slice(0,Math.floor(pineSet.length*0.2));
+      setTimeout(()=>{
+        show20.forEach(({el})=>{ el.style.opacity='1'; });
+        patchEls.forEach(img=>{ img.style.transition='opacity 2.0s ease'; img.style.opacity='0'; });
+      },arrivedAt+5500);                                                                                        // S7B — 20% of pine trees regrow + bare patches fade
+      setTimeout(()=>{ s7Btn.classList.add('show'); },arrivedAt+9000);                                        // S7B — Continue button appears
+      return;
+    }
+
+    // ── PATH C: 7–13 wolves ───────────────────────────────────────────────────
+    if (wolvesChosen>=7 && wolvesChosen<=13) {
+      setTimeout(()=>{ showText(`${wolvesChosen} wolves entered the valley. Packs began to form.`,'26px'); },3500);  // S7C — Narration: packs forming
+      const arrivedAt=slideWolvesIn(wolvesChosen)+3500;
+      setTimeout(()=>{ showText('The elk grew cautious. They began to move.','26px'); },arrivedAt+500);              // S7C — Narration: elk grow cautious
+      const w=window.innerWidth;
+      setTimeout(()=>{
+        s7ElkEls.slice(0,8).forEach(img=>{
+          img.style.transition='opacity 1.0s ease'; img.style.opacity='0';
+        });
+        s7ElkEls.slice(8).forEach(img=>{
+          const newX=Math.min(parseFloat(img.dataset.xPct)+18,84);
+          img.dataset.xPct=String(newX);
+          img.style.transition='left 2.5s ease'; img.style.left=`${Math.round(w*newX/100)}px`;
+        });
+      },arrivedAt+1000);                                                                                              // S7C — 8 elk fade out + remaining elk scatter right (elk moving)
+      setTimeout(()=>{ showText('The land began to recover — slowly.','26px'); },arrivedAt+5000);                   // S7C — Narration: land recovery begins
+      setTimeout(()=>{ muddyOv.style.opacity='0'; },arrivedAt+5300);                                               // S7C — Muddy ground overlay fades (riverbanks recovering)
+      // 50% trees + patches fade out
+      const pinesC=allTrees.filter(t=>t.type==='pine');
+      const halfC=Math.floor(pinesC.length/2);
+      setTimeout(()=>{
+        pinesC.slice(0,halfC).forEach(({el})=>{ el.style.opacity='1'; });
+        allTrees.filter(t=>t.type==='grassland').forEach(({el})=>{ el.style.opacity='1'; });
+        patchEls.forEach(img=>{ img.style.transition='opacity 2.5s ease'; img.style.opacity='0'; });
+      },arrivedAt+5500);                                                                                             // S7C — 50% pine trees + all grassland trees regrow, bare patches fade
+      setTimeout(()=>{ showText('A partial recovery. Some species returned, others did not.','26px'); },arrivedAt+12000);  // S7C — Narration: partial recovery
+      // Beavers
+      setTimeout(()=>{
+        showText('Beavers returned to some streams.','26px');                                                       // S7C — Narration: beavers returned
+        ['beaver','beaver2','beaver3'].forEach((key,bi)=>{
+          const def=ECOSYSTEM[key];
+          setTimeout(()=>{
+            const bv=document.createElement('img');
+            bv.src='images/beaver.png'; bv.alt=''; bv.classList.add('animal');
+            bv.onerror=()=>{bv.style.display='none';};
+            bv.style.opacity='0'; bv.style.transition='opacity 1.0s ease';
+            const ww=window.innerWidth,hh=Math.round(ww*9/16);
+            bv.style.height=`${Math.round(hh*def.h)}px`; bv.style.width='auto';
+            bv.style.left=`${Math.round(ww*def.x/100)}px`;
+            bv.style.top=`${Math.round(hh*def.y/100)}px`;
+            bv.style.zIndex=String(def.z);
+            bv.style.animationName='bob'; bv.style.animationDuration=`${(2.2+Math.random()*0.8).toFixed(2)}s`;
+            bv.style.animationDelay=`${(Math.random()*1.2).toFixed(2)}s`;
+            bv.style.animationTimingFunction='ease-in-out';
+            bv.style.animationIterationCount='infinite';
+            scene.insertBefore(bv,s7Btn);
+            requestAnimationFrame(()=>requestAnimationFrame(()=>{ bv.style.opacity='1'; }));
+          },bi*700);                                                                                                 // S7C — Beaver image appears (staggered)
+        });
+      },arrivedAt+13000);                                                                                           // S7C — Beaver cascade starts
+      setTimeout(()=>{ s7Btn.classList.add('show'); },arrivedAt+17000);                                           // S7C — Continue button appears
+      return;
+    }
+
+    // ── PATH D: 14–17 wolves — full cascade ───────────────────────────────────
+    if (wolvesChosen>=14 && wolvesChosen<=17) {
+      showScientistBadge();
+      setTimeout(()=>{ showText('Fourteen wolves entered Yellowstone. The same choice scientists made in 1995.','26px'); },1000);  // S7D — Narration: 14 wolves (scientist's choice)
+      const arrivedAt=slideWolvesIn(14)+3500;
+
+      setTimeout(()=>{ showText('The elk had not seen a predator in 70 years. Everything changed.','26px'); },arrivedAt+3000);  // S7D — Narration: elk fear begins
+      const ww=window.innerWidth;
+      setTimeout(()=>{
+        s7ElkEls.forEach((img,i)=>{
+          if (i<14) {
+            setTimeout(()=>{ img.style.transition='opacity 0.2s ease'; img.style.opacity='0'; },i*300);  // S7D — Elk fades out one by one (hunted by wolves)
+          } else {
+            const newX=Math.min(parseFloat(img.dataset.xPct)+20,85);
+            img.dataset.xPct=String(newX);
+            img.style.transition='left 3.5s ease';
+            img.style.left=`${Math.round(ww*newX/100)}px`;
+          }
+        });
+      },arrivedAt+3400);                                                                                   // S7D — 14 elk fade out + remaining elk scatter right (elk fleeing wolves)
+
+      const step3At=arrivedAt+3000+14*300+3750;
+      setTimeout(()=>{ showText('The land began to breathe again.','26px'); muddyOv.style.opacity='0'; },step3At);  // S7D — Narration: land recovering + muddy overlay fades
+
+      const step4At=step3At+3000;
+      setTimeout(()=>{
+        showText('The forests returned to the riverbanks.','26px');                                       // S7D — Narration: forests returning
+        const allPines=allTrees.filter(t=>t.type==='pine');
+        const allGrass=allTrees.filter(t=>t.type==='grassland');
+        const groups=[];
+        for(let g=0;g<Math.ceil(allPines.length/12);g++) groups.push(allPines.slice(g*12,(g+1)*12));
+        groups.forEach((grp,g)=>setTimeout(()=>{ grp.forEach(({el})=>{ el.style.opacity='1'; }); },g*750));         // S7D — Pine tree group regrows (staggered wave)
+        setTimeout(()=>{ allGrass.forEach(({el})=>{ el.style.opacity='1'; }); },groups.length*750);                 // S7D — Grassland trees regrow (after all pine groups)
+        // Patches fade as forests return
+        patchEls.forEach((img,i)=>{ setTimeout(()=>{ img.style.transition='opacity 2.5s ease'; img.style.opacity='0'; }, i*300); });  // S7D — Bare soil patch fades (forests reclaiming ground)
+      },step4At);                                                                                          // S7D — Forest regrowth sequence starts
+
+      // Species cascade sequence
+      const speciesSeq = [
+        { key:'beaver',    src:'images/beaver.png',    line:'Beavers returned — for the first time in decades.',    delay:0 },
+        { key:'beaverDam', src:'images/beaver-dam.png', line:'They built dams, slowing the river and filtering the water.', delay:2250 },
+        { key:'grizzly',   src:'images/grizzly.png',   line:'Grizzly bears thrived, feeding on wolf kills.',         delay:4500 },
+        { key:'songbird',  src:'images/songbird.png',  line:'Songbirds returned as riverside forests grew back.',    delay:6750 },
+        { key:'otter',     src:'images/otter.png',     line:'Otters came back as the river ran clear again.',        delay:9000 },
+        { key:'eagle',     src:'images/eagle.png',     line:'Eagles and hawks returned — fewer coyotes meant more prey.', delay:11250 },
+        { key:'pronghorn', src:'images/pronghorn.png', line:'Pronghorn antelope recovered as coyote numbers fell.', delay:13500 },
+      ];
+      const speciesStartAt=step4At+9000;
+      speciesSeq.forEach(({key,src,line,delay})=>{
+        setTimeout(()=>{
+          showText(line,'24px');                                                                           // S7D — Species cascade narration + animal image appears
+          const def=ECOSYSTEM[key];
+          const spImg=document.createElement('img');
+          spImg.src=src; spImg.alt=''; spImg.classList.add('animal');
+          spImg.onerror=()=>{spImg.style.display='none';};
+          spImg.style.opacity='0'; spImg.style.transition='opacity 1.0s ease';
+          const sw=window.innerWidth,sh=Math.round(sw*9/16);
+          spImg.style.height=`${Math.round(sh*def.h)}px`; spImg.style.width='auto';
+          spImg.style.left=`${Math.round(sw*def.x/100)}px`;
+          spImg.style.top=`${Math.round(sh*def.y/100)}px`;
+          spImg.style.zIndex=String(def.z);
+          spImg.style.animationName='bob';
+          spImg.style.animationDuration=`${(2.0+Math.random()*1.0).toFixed(2)}s`;
+          spImg.style.animationDelay=`${(Math.random()*1.5).toFixed(2)}s`;
+          spImg.style.animationTimingFunction='ease-in-out';
+          spImg.style.animationIterationCount='infinite';
+          scene.insertBefore(spImg,s7Btn);
+          requestAnimationFrame(()=>requestAnimationFrame(()=>{ spImg.style.opacity='1'; }));
+        },speciesStartAt+delay);
+      });
+
+      const finalAt=speciesStartAt+15750;
+      setTimeout(()=>{ showText('This is a trophic cascade. One species changed everything.','34px'); },finalAt);  // S7D — Final narration: trophic cascade reveal
+      setTimeout(()=>{ s7Btn.classList.add('show'); },finalAt+2250);                                               // S7D — Continue button appears
+      return;
+    }
+
+    // ── PATH E: 18+ wolves — too many ─────────────────────────────────────────
+    setTimeout(()=>{ showText(`${wolvesChosen} wolves — far more than the ecosystem had seen in a century.`,'26px'); },3500);  // S7E — Narration: too many wolves
+    const arrivedEAt=slideWolvesIn(14)+3500; // cap visual at 14
+    setTimeout(()=>{ showText('The elk were over-hunted. Their population collapsed too quickly.','26px'); },arrivedEAt+4000);  // S7E — Narration: elk over-hunted, collapse
+    setTimeout(()=>{
+      s7ElkEls.forEach((img,i)=>{
+        setTimeout(()=>{ img.style.transition='opacity 0.2s ease'; img.style.opacity='0'; },i*180);   // S7E — Elk fades out rapidly (population collapse)
+      });
+    },arrivedEAt+4500);                                                                                 // S7E — All elk fade out (herd collapse sequence starts)
+    // Grizzly
+    setTimeout(()=>{
+      showText('Without enough elk grazing, grizzlies competed fiercely for wolf kills.','26px');      // S7E — Narration: grizzly competition
+      const def=ECOSYSTEM.grizzly;
+      const gz=document.createElement('img');
+      gz.src='images/grizzly.png'; gz.alt=''; gz.classList.add('animal');
+      gz.onerror=()=>{gz.style.display='none';};
+      gz.style.opacity='0'; gz.style.transition='opacity 1.0s ease';
+      const gw=window.innerWidth,gh=Math.round(gw*9/16);
+      gz.style.height=`${Math.round(gh*def.h)}px`; gz.style.width='auto';
+      gz.style.left=`${Math.round(gw*def.x/100)}px`;
+      gz.style.top=`${Math.round(gh*def.y/100)}px`;
+      gz.style.zIndex=String(def.z);
+      gz.style.animationName='bob'; gz.style.animationDuration='2.8s';
+      gz.style.animationTimingFunction='ease-in-out'; gz.style.animationIterationCount='infinite';
+      scene.insertBefore(gz,s7Btn);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ gz.style.opacity='1'; }));                 // S7E — Grizzly image appears
+      // Grizzly moves toward wolves
+      setTimeout(()=>{
+        gz.style.transition='left 2.5s ease';
+        gz.style.left=`${Math.round(gw*0.08)}px`;
+      },1500);                                                                                          // S7E — Grizzly moves toward wolves (aggression)
+    },arrivedEAt+8000);                                                                               // S7E — Grizzly appears + narration: grizzly competition
+    setTimeout(()=>{ showText('Balance requires precision. Too many wolves created a different kind of imbalance.','24px'); },arrivedEAt+12000);  // S7E — Narration: balance requires precision
+    // 40% trees + patches fade out
+    const pinesE=allTrees.filter(t=>t.type==='pine');
+    setTimeout(()=>{
+      pinesE.slice(0,Math.floor(pinesE.length*0.4)).forEach(({el})=>{ el.style.opacity='1'; });
+      patchEls.forEach(img=>{ img.style.transition='opacity 2.0s ease'; img.style.opacity='0'; });
+    },arrivedEAt+13000);                                                                               // S7E — 40% pine trees partially regrow + bare patches fade
+    setTimeout(()=>{ s7Btn.classList.add('show'); },arrivedEAt+16000);                               // S7E — Continue button appears
+  }
+
+  // ── Screen 8 ──────────────────────────────────────────────────────────────────
+  function buildScreen8() {
+    // No scene wipe — UI layer drops on top of current S7 scene state
+    // Remove old continue btn, s7-narration
+    const oldNar = document.getElementById('s7-narration');
+    if (oldNar) oldNar.remove();
+    const oldBtn = document.querySelector('.continue-btn');
+    if (oldBtn) oldBtn.remove();
+
+    const w=window.innerWidth, h=Math.round(w*9/16);
+
+    // Top narration box
+    const narBox=document.createElement('div');
+    narBox.className='top-dark-box';
+    narBox.style.zIndex='1000';
+    narBox.innerHTML='<p style="font-family:Georgia,serif;font-style:italic;font-size:22px;color:#fff;margin:0;">Now explore the system. Use the controls to see what happens.</p>';
+    scene.appendChild(narBox);
+
+    // Slider bar
+    const sliderBar=document.createElement('div');
+    sliderBar.id='s8-slider-bar';
+    const wolfCount0=Math.min(window.wolvesChosen||7,14);
+    sliderBar.innerHTML=`
+      <div class="s8-slider-group">
+        <label>Wolf population</label>
+        <input type="range" id="s8-wolf-sl" min="0" max="28" value="${wolfCount0}">
+        <span class="s8-val" id="s8-wolf-val">${wolfCount0}</span>
+      </div>
+      <div class="s8-slider-group">
+        <label>Human hunting pressure</label>
+        <input type="range" id="s8-hunt-sl" min="0" max="${wolfCount0}" value="0">
+        <span class="s8-val" id="s8-hunt-val">0</span>
+        <span class="s8-sub">Simulates poaching / rancher conflict</span>
+      </div>
+    `;
+    scene.appendChild(sliderBar);
+
+    // Dashboard
+    const dash=document.createElement('div');
+    dash.id='s8-dashboard';
+    dash.style.right=ECOSYSTEM.dashboard.right;
+    dash.style.top=ECOSYSTEM.dashboard.top;
+    dash.style.width=ECOSYSTEM.dashboard.width;
+    dash.innerHTML=`
+      <div class="db-row"><span class="db-label">Wolf population</span><span class="db-val" id="db-wolf">${wolfCount0}</span><span class="db-arrow" id="db-wolf-arr"></span></div>
+      <div class="db-row"><span class="db-label">Elk population</span><span class="db-val" id="db-elk">—</span><span class="db-arrow" id="db-elk-arr"></span></div>
+      <div class="db-row"><span class="db-label">Vegetation</span><span class="db-val" id="db-veg">—</span><span class="db-arrow" id="db-veg-arr"></span></div>
+      <div class="db-row"><span class="db-label">River health</span><span class="db-val" id="db-riv">—</span><span class="db-arrow" id="db-riv-arr"></span></div>
+      <div class="db-row"><span class="db-label">Biodiversity</span><span class="db-val" id="db-bio">—</span><span class="db-arrow" id="db-bio-arr"></span></div>
+    `;
+    scene.appendChild(dash);
+
+    // Clear existing animals and rebuild cleanly for sandbox
+    scene.querySelectorAll('.animal').forEach(el=>el.remove());
+
+    const sbElkEls=[]; const sbWolfEls=[]; const sbSpeciesEls={};
+
+    ECOSYSTEM.elk.forEach((d,i)=>{
+      const img=buildAnimal('images/elk.png',d,d.h||0.10,i,dash);
+      img.style.opacity='1'; sbElkEls.push(img);
+    });
+    ECOSYSTEM.wolves.forEach((d,i)=>{
+      const img=buildAnimal('images/wolf.png',d,d.h||0.085,100+i,dash);
+      img.style.opacity=i<wolfCount0?'1':'0'; sbWolfEls.push(img);
+    });
+    const w8=window.innerWidth, h8=Math.round(w8*9/16);
+    layoutAnimals(sbWolfEls, w8, h8);
+    const sbCoyoteEls=[];
+    coyoteDefs.forEach((d,i)=>{
+      const img=buildAnimal('images/coyote.png',d,d.h||0.07,200+i,dash);
+      img.style.transform='scaleX(-1)'; img.style.opacity='1';
+      sbCoyoteEls.push(img);
+    });
+    layoutAnimals(sbCoyoteEls, w8, h8);
+
+    // Bare soil patches — visible only when wolf population is 0
+    const sbPatchEls = buildPatches(dash, false);
+    layoutPatches(sbPatchEls, w8, h8);
+
+    // Cascade species — show/hide based on wolf count
+    const speciesKeys=['beaver','beaverDam','grizzly','songbird','otter','eagle','pronghorn'];
+    const speciesSrc={ beaver:'images/beaver.png', beaverDam:'images/beaver-dam.png', grizzly:'images/grizzly.png',
+      songbird:'images/songbird.png', otter:'images/otter.png', eagle:'images/eagle.png', pronghorn:'images/pronghorn.png' };
+    speciesKeys.forEach(key=>{
+      const def=ECOSYSTEM[key];
+      const img=document.createElement('img');
+      img.src=speciesSrc[key]; img.alt=''; img.classList.add('animal');
+      img.onerror=()=>{img.style.display='none';};
+      img.dataset.xPct=def.x; img.dataset.yPct=def.y; img.dataset.scale='1';
+      img.dataset.baseHeightFactor=def.h;
+      img.style.transition='opacity 0.2s ease'; img.style.opacity='0';
+      img.style.animationName='bob'; img.style.animationDuration='2.5s';
+      img.style.animationTimingFunction='ease-in-out'; img.style.animationIterationCount='infinite';
+      scene.insertBefore(img,dash); sbSpeciesEls[key]=img;
+    });
+
+    // Muddy overlay
+    let muddyOvSb=document.getElementById('muddy-ov');
+    if (!muddyOvSb) {
+      muddyOvSb=document.createElement('div');
+      muddyOvSb.id='muddy-ov';
+      muddyOvSb.style.cssText=`position:absolute;left:0;right:0;pointer-events:none;z-index:8;
+        background:${ECOSYSTEM.muddyPatch.color};opacity:0;transition:opacity 0.5s ease;`;
+      scene.insertBefore(muddyOvSb,narBox);
+    }
+
+    // Tooltip
+    const tooltip=document.createElement('div');
+    tooltip.className='eco-tooltip'; tooltip.style.display='none';
+    scene.appendChild(tooltip);
+
+    const tooltipTexts={
+      wolf:'Apex predator. Controls elk movement and population.',
+      elk:'Key prey species. Overgrazing damages vegetation when unchecked.',
+      coyote:'Mid-level predator. Suppressed by wolves, otherwise dominates.',
+      beaver:'Ecosystem engineer. Dams slow rivers and create wetland habitats.',
+      beaverDam:'Beaver dam. Slows river flow and creates wetland habitats.',
+      grizzly:'Opportunistic predator. Benefits from wolf kills as food source.',
+      songbird:'Indicator species. Returns when riverside trees are restored.',
+      otter:'Aquatic species. Thrives only in clean, slow-moving water.',
+      eagle:'Top avian predator. Returns when rodent populations recover.',
+      pronghorn:'Fast grazer. Recovers when coyote pressure is reduced by wolves.',
+      tree:'Riparian vegetation. Stabilises riverbanks and supports biodiversity.',
+    };
+
+    function attachTooltip(el, key) {
+      el.style.cursor='pointer';
+      el.style.pointerEvents='auto';
+      el.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        tooltip.textContent=tooltipTexts[key]||'';
+        tooltip.style.display='block';
+        const rect=el.getBoundingClientRect();
+        const sceneRect=scene.getBoundingClientRect();
+        tooltip.style.left=`${rect.left-sceneRect.left+rect.width/2}px`;
+        tooltip.style.top=`${rect.top-sceneRect.top-60}px`;
+        tooltip.style.transform='translateX(-50%)';
+      });
+    }
+    sbWolfEls.forEach(el=>attachTooltip(el,'wolf'));
+    sbElkEls.forEach(el=>attachTooltip(el,'elk'));
+    Object.entries(sbSpeciesEls).forEach(([key,el])=>attachTooltip(el,key));
+    allTrees.forEach(({el})=>{
+      el.style.cursor='pointer'; el.style.pointerEvents='auto';
+      el.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        tooltip.textContent=tooltipTexts.tree;
+        tooltip.style.display='block';
+        const rect=el.getBoundingClientRect();
+        const sceneRect=scene.getBoundingClientRect();
+        tooltip.style.left=`${rect.left-sceneRect.left+rect.width/2}px`;
+        tooltip.style.top=`${rect.top-sceneRect.top-50}px`;
+        tooltip.style.transform='translateX(-50%)';
+      });
+    });
+    scene.addEventListener('click',()=>{ tooltip.style.display='none'; });
+
+    // Layout sandbox
+    function s8Layout() {
+      const sw=window.innerWidth,sh=Math.round(sw*9/16);
+      scene.style.height=`${sh}px`;
+      layoutTrees(sw,sh);
+      layoutAnimals([...sbElkEls,...sbWolfEls,...sbCoyoteEls],sw,sh);
+      layoutPatches(sbPatchEls,sw,sh);
+      muddyOvSb.style.top=ECOSYSTEM.muddyPatch.top;
+      muddyOvSb.style.height=ECOSYSTEM.muddyPatch.height;
+      speciesKeys.forEach(key=>{
+        const def=ECOSYSTEM[key],el=sbSpeciesEls[key];
+        el.style.height=`${Math.round(sh*def.h)}px`; el.style.width='auto';
+        el.style.left=`${Math.round(sw*def.x/100)}px`;
+        el.style.top=`${Math.round(sh*def.y/100)}px`;
+        el.style.zIndex=String(def.z);
+      });
+    }
+    activeLayout=s8Layout;
+    window.addEventListener('resize',s8Layout);
+    s8Layout();
+
+    // State tracking for arrows
+    let prevState={wolf:wolfCount0,elk:0,veg:0,riv:0,bio:0};
+    let sliderMoved=false;
+
+    function calcStats(wc) {
+      const elkC=Math.max(4,Math.round(28-wc*1.4));
+      const vegPct=wc>=14?100:wc>=7?60:wc>=1?25:0;
+      const rivPct=wc>=14?100:wc>=7?65:wc>=1?30:5;
+      const bioPct=wc>=14?100:wc>=7?60:wc>=1?25:0;
+      return {wolf:wc,elk:elkC,veg:vegPct,riv:rivPct,bio:bioPct};
+    }
+
+    function arrow(curr,prev) {
+      if (curr>prev) return '<span class="db-arrow db-up">↑</span>';
+      if (curr<prev) return '<span class="db-arrow db-dn">↓</span>';
+      return '';
+    }
+
+    function updateDash(stats) {
+      const ids=['wolf','elk','veg','riv','bio'];
+      const vals=[stats.wolf,stats.elk,`${stats.veg}%`,`${stats.riv}%`,`${stats.bio}%`];
+      const prevVals=[prevState.wolf,prevState.elk,prevState.veg,prevState.riv,prevState.bio];
+      ids.forEach((id,i)=>{
+        const v=document.getElementById(`db-${id}`);
+        const a=document.getElementById(`db-${id}-arr`);
+        if(v)v.textContent=vals[i];
+        if(a)a.innerHTML=arrow(typeof vals[i]==='string'?parseInt(vals[i]):vals[i],prevVals[i]);
+      });
+      prevState={...stats};
+    }
+
+    function applyWolfCount(wc) {
+      sbWolfEls.forEach((img,i)=>{
+        img.style.transition='opacity 0.2s ease';
+        img.style.opacity=i<wc?'1':'0';
+      });
+      const stats=calcStats(wc);
+      const elkVisible=stats.elk;
+      sbElkEls.forEach((img,i)=>{
+        img.style.transition='opacity 0.2s ease';
+        img.style.opacity=i<elkVisible?'1':'0';
+      });
+      // Trees
+      const pine=allTrees.filter(t=>t.type==='pine');
+      const grass=allTrees.filter(t=>t.type==='grassland');
+      const showPct=wc>=14?1:wc>=7?0.5:wc>=1?0.2:0;
+      const showN=Math.round(pine.length*showPct);
+      pine.forEach(({el},i)=>{ el.style.transition='opacity 0.2s ease'; el.style.opacity=i<showN?'1':'0'; });
+      grass.forEach(({el})=>{ el.style.transition='opacity 0.2s ease'; el.style.opacity=wc>=1?'1':'0'; });
+      // Muddy overlay
+      muddyOvSb.style.transition='opacity 0.2s ease';
+      muddyOvSb.style.opacity=wc>=7?'0':'1';
+      // Bare soil patches — only visible when no wolves
+      sbPatchEls.forEach(img=>{ img.style.transition='opacity 0.4s ease'; img.style.opacity=wc===0?'1':'0'; });
+      // Species
+      speciesKeys.forEach(key=>{
+        const thr=key==='grizzly'?8:12;
+        sbSpeciesEls[key].style.opacity=wc>=thr?'1':'0';
+      });
+      updateDash(stats);
+    }
+
+    // Wire sliders
+    const wolfSl=document.getElementById('s8-wolf-sl');
+    const huntSl=document.getElementById('s8-hunt-sl');
+    const wolfValEl=document.getElementById('s8-wolf-val');
+    const huntValEl=document.getElementById('s8-hunt-val');
+
+    wolfSl.addEventListener('input',()=>{
+      if (!sliderMoved) { sliderMoved=true; setTimeout(()=>{ outBtn.classList.add('show'); },500); }
+      const wc=parseInt(wolfSl.value);
+      wolfValEl.textContent=wc;
+      huntSl.max=wc;
+      if (parseInt(huntSl.value)>wc) { huntSl.value=wc; huntValEl.textContent=wc; }
+      applyWolfCount(Math.max(0,wc-parseInt(huntSl.value)));
+    });
+    huntSl.addEventListener('input',()=>{
+      if (!sliderMoved) { sliderMoved=true; setTimeout(()=>{ outBtn.classList.add('show'); },500); }
+      const killed=parseInt(huntSl.value);
+      huntValEl.textContent=killed;
+      const effectiveWolves=Math.max(0,parseInt(wolfSl.value)-killed);
+      applyWolfCount(effectiveWolves);
+      document.getElementById('db-wolf').textContent=effectiveWolves;
+    });
+
+    // Outcome button
+    const outBtn=document.createElement('button');
+    outBtn.className='continue-btn'; outBtn.textContent='→ See the full outcome';
+    outBtn.style.bottom='20px'; outBtn.style.top='auto'; outBtn.style.right='24px';
+    scene.appendChild(outBtn);
+    outBtn.addEventListener('click',()=>buildScreen9());
+
+    // Init display
+    applyWolfCount(wolfCount0);
+  }
+
+  // ── Screen 9 ──────────────────────────────────────────────────────────────────
+  function buildScreen9() {
+    // Full-screen overlay on top of everything
+    const s9=document.createElement('div');
+    s9.id='s9-screen';
+    document.body.appendChild(s9);
+
+    s9.innerHTML=`
+      <div id="s9-title">The Trophic Cascade</div>
+      <div id="s9-subtitle">How one species changed everything</div>
+      <div id="s9-main">
+        <div id="s9-diagram">
+          <svg class="causal-arrows" id="s9-svg"></svg>
+        </div>
+        <div id="s9-fact">
+          <h3 id="s9-fact-title">Click a node</h3>
+          <p id="s9-fact-body">Select any node in the diagram to see real data from Yellowstone's recovery.</p>
+        </div>
+      </div>
+      <div id="s9-bottom">
+        <label style="font-style:italic;font-size:14px;">Wolf population: <span id="s9-wolf-count">14</span></label>
+        <input type="range" id="s9-wolf-slider" min="0" max="28" value="14">
+        <button id="s9-restart">Restart →</button>
+      </div>
+    `;
+
+    document.getElementById('s9-restart').addEventListener('click',()=>{ location.reload(); });
+
+    const facts={
+      'Wolves':         {title:'Wolves',        body:'Reintroduced in 1995. 14 wolves began a chain reaction across the entire ecosystem.'},
+      'Elk population': {title:'Elk population',body:'Fell from 19,000 to 6,100 after wolf reintroduction. But remaining elk were healthier.'},
+      'Elk movement':   {title:'Elk movement',  body:'Wolves created an "ecology of fear" — elk avoided riverbanks where they could be ambushed.'},
+      'Vegetation':     {title:'Vegetation',    body:'Willows and aspens grew 5× their original size within 6 years of wolf reintroduction.'},
+      'River health':   {title:'River health',  body:'Rivers literally changed course as stabilised banks reduced erosion.'},
+      'Beavers':        {title:'Beavers',       body:'From 1 colony in 1995 to 9 colonies by 2023. Beaver dams created new wetland habitats.'},
+      'Biodiversity':   {title:'Biodiversity',  body:'Songbirds, otters, eagles, pronghorn, grizzlies — all recovered after wolves returned.'},
+    };
+
+    const nodeNames=['Wolves','Elk population','Elk movement','Vegetation','River health','Beavers','Biodiversity'];
+    const nodePositions={
+      'Wolves':         {cx:18, cy:40},
+      'Elk population': {cx:35, cy:22},
+      'Elk movement':   {cx:35, cy:58},
+      'Vegetation':     {cx:54, cy:40},
+      'River health':   {cx:72, cy:28},
+      'Beavers':        {cx:72, cy:55},
+      'Biodiversity':   {cx:88, cy:40},
+    };
+
+    const edges=[
+      {from:'Wolves',        to:'Elk population', label:'reduces',        color:'#f06e6e', dashed:false},
+      {from:'Wolves',        to:'Elk movement',   label:'increases',      color:'#6ef06e', dashed:false},
+      {from:'Elk movement',  to:'Vegetation',     label:'allows recovery',color:'#6ef06e', dashed:false},
+      {from:'Elk population',to:'Vegetation',     label:'destroys',       color:'#f06e6e', dashed:false},
+      {from:'Vegetation',    to:'River health',   label:'stabilises',     color:'#6ef06e', dashed:false},
+      {from:'Vegetation',    to:'Beavers',        label:'enables',        color:'#6ef06e', dashed:false},
+      {from:'Beavers',       to:'River health',   label:'improves',       color:'#6ef06e', dashed:false},
+      {from:'River health',  to:'Biodiversity',   label:'supports',       color:'#6ef06e', dashed:false},
+      {from:'Wolves',        to:'Biodiversity',   label:'cascade effect', color:'#6ef06e', dashed:true},
+    ];
+
+    function calcNodeStats(wc) {
+      const elkPop=Math.max(4,Math.round(19000-(wc*900)));
+      const elkMov=wc>=1?Math.round(wc*6):0;
+      const veg=wc>=14?95:wc>=7?60:wc>=1?25:5;
+      const riv=wc>=14?90:wc>=7?55:wc>=1?20:5;
+      const bvr=wc>=7?Math.round((wc-6)*0.8):0;
+      const bio=wc>=14?95:wc>=7?55:wc>=1?20:3;
+      return {'Wolves':wc,'Elk population':elkPop,'Elk movement':elkMov+'%',
+              'Vegetation':veg+'%','River health':riv+'%','Beavers':bvr+' colonies','Biodiversity':bio+'%'};
+    }
+
+    function renderDiagram(wc) {
+      const diag=document.getElementById('s9-diagram');
+      if (!diag) return;
+      const dw=diag.offsetWidth, dh=diag.offsetHeight;
+      if (!dw||!dh) return;
+      const stats=calcNodeStats(wc);
+
+      // Draw SVG arrows
+      const svg=document.getElementById('s9-svg');
+      svg.innerHTML='';
+      svg.setAttribute('width',dw); svg.setAttribute('height',dh);
+      svg.innerHTML=`<defs>
+        <marker id="arr-g" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6ef06e"/></marker>
+        <marker id="arr-r" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f06e6e"/></marker>
+      </defs>`;
+
+      edges.forEach(e=>{
+        const fp=nodePositions[e.from], tp=nodePositions[e.to];
+        const x1=fp.cx/100*dw, y1=fp.cy/100*dh;
+        const x2=tp.cx/100*dw, y2=tp.cy/100*dh;
+        const mx=(x1+x2)/2, my=(y1+y2)/2-30;
+        const isG=e.color==='#6ef06e';
+        const markerId=isG?'arr-g':'arr-r';
+        const pathEl=document.createElementNS('http://www.w3.org/2000/svg','path');
+        pathEl.setAttribute('d',`M${x1},${y1} Q${mx},${my} ${x2},${y2}`);
+        pathEl.setAttribute('fill','none');
+        pathEl.setAttribute('stroke',e.color);
+        pathEl.setAttribute('stroke-width','1.8');
+        if (e.dashed) pathEl.setAttribute('stroke-dasharray','6,4');
+        pathEl.setAttribute('marker-end',`url(#${markerId})`);
+        pathEl.setAttribute('opacity','0.75');
+        svg.appendChild(pathEl);
+        const txtEl=document.createElementNS('http://www.w3.org/2000/svg','text');
+        txtEl.setAttribute('x',String(mx)); txtEl.setAttribute('y',String(my-6));
+        txtEl.setAttribute('fill',e.color); txtEl.setAttribute('font-size','10');
+        txtEl.setAttribute('font-family','Georgia,serif'); txtEl.setAttribute('text-anchor','middle');
+        txtEl.setAttribute('opacity','0.85');
+        txtEl.textContent=e.label;
+        svg.appendChild(txtEl);
+      });
+
+      // Remove old nodes
+      diag.querySelectorAll('.causal-node').forEach(n=>n.remove());
+
+      // Render nodes
+      nodeNames.forEach(name=>{
+        const pos=nodePositions[name];
+        const nd=document.createElement('div');
+        nd.className='causal-node'; nd.dataset.node=name;
+        nd.style.left=`${pos.cx}%`; nd.style.top=`${pos.cy}%`;
+        nd.style.transform='translate(-50%,-50%)';
+        nd.innerHTML=`${name}<span class="node-stat">${stats[name]}</span>`;
+        nd.addEventListener('click',()=>{
+          diag.querySelectorAll('.causal-node').forEach(n=>n.classList.remove('active'));
+          nd.classList.add('active');
+          const f=facts[name];
+          document.getElementById('s9-fact-title').textContent=f.title;
+          document.getElementById('s9-fact-body').textContent=f.body;
+        });
+        diag.appendChild(nd);
+      });
+    }
+
+    // Wire wolf slider
+    const s9sl=document.getElementById('s9-wolf-slider');
+    const s9wc=document.getElementById('s9-wolf-count');
+    s9sl.addEventListener('input',()=>{
+      s9wc.textContent=s9sl.value;
+      renderDiagram(parseInt(s9sl.value));
+    });
+
+    // Initial render after layout
+    setTimeout(()=>renderDiagram(14),100);
+    window.addEventListener('resize',()=>{ setTimeout(()=>renderDiagram(parseInt(s9sl.value)),50); });
+  }
+</script>
+
+</body>
+</html>
