@@ -286,6 +286,72 @@
       border: 1px solid rgba(255,255,255,0.25);
     }
 
+  /* ── Screen 9: Interactive Trophic Cascade Map ──────────────────────────── */
+  #s9-screen {
+    position: fixed; inset: 0; z-index: 8000;
+    background: #0d1610;
+    display: flex; flex-direction: column;
+    font-family: Georgia, serif; color: #e8ffe8;
+    overflow: hidden;
+  }
+  #s9-title-bar {
+    display: flex; align-items: baseline; padding: 10px 20px 8px;
+    background: rgba(0,0,0,0.45); border-bottom: 1px solid rgba(255,255,255,0.1);
+    gap: 14px;
+  }
+  #s9-title-bar h1 { font-size: 20px; font-style: italic; margin: 0; }
+  #s9-title-bar span { font-size: 12px; opacity: 0.45; font-style: normal; }
+  #s9-body { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+  #s9-map { flex: 1; position: relative; overflow: hidden; cursor: default; }
+  #s9-map-svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+  .s9-node {
+    position: absolute; transform: translate(-50%,-50%);
+    background: #192a1b; border: 1.5px solid rgba(255,255,255,0.22);
+    border-radius: 10px; padding: 7px 12px;
+    font-size: 11.5px; text-align: center; line-height: 1.35;
+    cursor: pointer; white-space: pre-line;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    user-select: none; z-index: 2;
+  }
+  .s9-node:hover { border-color: rgba(255,255,255,0.7); }
+  .s9-node.s9-active {
+    background: #2a5030; border-color: #8fff8f;
+    box-shadow: 0 0 14px rgba(100,255,100,0.4); z-index: 3;
+  }
+  .s9-node.s9-connected { border-color: rgba(120,255,120,0.55); }
+  .s9-node.s9-dimmed { opacity: 0.12; }
+  .s9-node.s9-healthy { border-color: #6ef06e !important; }
+  .s9-node.s9-stressed { border-color: #f06e6e !important; background: #2a1919 !important; }
+  #s9-panel {
+    width: 220px; background: rgba(0,0,0,0.4);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    padding: 18px 16px; font-size: 13px; line-height: 1.6;
+    display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+  }
+  #s9-pname { font-size: 16px; color: #a8ffa8; margin: 0 0 4px; }
+  #s9-pdesc { opacity: 0.8; margin: 0; font-style: italic; font-size: 12px; }
+  #s9-pconn { font-size: 10.5px; opacity: 0.5; white-space: pre-line; margin-top: 4px; }
+  #s9-bottom {
+    padding: 10px 24px 12px;
+    background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; gap: 32px; flex-wrap: wrap; justify-content: center;
+  }
+  .s9-sl-group { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+  .s9-sl-group label { display: flex; justify-content: space-between; gap: 12px; }
+  .s9-sl-group input[type=range] { width: 190px; accent-color: #6ef06e; }
+  .s9-sl-sub { font-size: 10px; opacity: 0.4; }
+  #s9-legend { display: flex; gap: 14px; font-size: 11px; opacity: 0.65; align-items: center; }
+  .s9-leg { display: flex; align-items: center; gap: 5px; }
+  .s9-leg-line { width: 22px; height: 2px; }
+  .s9-leg-line.pos { background: #6ef06e; }
+  .s9-leg-line.neg { background: #f06e6e; }
+  .s9-leg-line.neu { background: rgba(255,255,255,0.4); }
+  #s9-close-btn {
+    font-family: Georgia, serif; font-style: italic; font-size: 15px;
+    color: #fff; background: transparent; border: 1px solid rgba(255,255,255,0.35);
+    padding: 6px 18px; border-radius: 5px; cursor: pointer; margin-left: auto;
+  }
+  #s9-close-btn:hover { background: rgba(255,255,255,0.1); }
   </style>
   <script src="ecosystem.js"></script>
   <script src="trees.js"></script>
@@ -1510,8 +1576,16 @@ scene.addEventListener('click', function goS2() {
     const wolfValEl=document.getElementById('s8-wolf-val');
     const huntValEl=document.getElementById('s8-hunt-val');
 
+    // Map button (always visible)
+    const mapBtn=document.createElement('button');
+    mapBtn.className='continue-btn'; mapBtn.textContent='→ See Interactive Map';
+    mapBtn.style.bottom='70px'; mapBtn.style.top='auto'; mapBtn.style.right='24px';
+    scene.appendChild(mapBtn);
+    mapBtn.classList.add('show');
+    mapBtn.addEventListener('click',()=>buildScreen9());
+
     wolfSl.addEventListener('input',()=>{
-      if (!sliderMoved) { sliderMoved=true; setTimeout(()=>{ outBtn.classList.add('show'); },500); }
+      if (!sliderMoved) { sliderMoved=true; }
       const wc=parseInt(wolfSl.value);
       wolfValEl.textContent=wc;
       huntSl.max=wc;
@@ -1519,7 +1593,7 @@ scene.addEventListener('click', function goS2() {
       applyWolfCount(Math.max(0,wc-parseInt(huntSl.value)));
     });
     huntSl.addEventListener('input',()=>{
-      if (!sliderMoved) { sliderMoved=true; setTimeout(()=>{ outBtn.classList.add('show'); },500); }
+      if (!sliderMoved) { sliderMoved=true; }
       const killed=parseInt(huntSl.value);
       huntValEl.textContent=killed;
       const effectiveWolves=Math.max(0,parseInt(wolfSl.value)-killed);
@@ -1537,6 +1611,248 @@ scene.addEventListener('click', function goS2() {
 
     // Init display
     applyWolfCount(wolfCount0);
+  }
+
+  // ── Screen 9: Interactive Trophic Cascade Map ─────────────────────────────
+  function buildScreen9() {
+    const s9=document.createElement('div');
+    s9.id='s9-screen';
+    document.body.appendChild(s9);
+
+    s9.innerHTML=`
+      <div id="s9-title-bar">
+        <h1>The Trophic Cascade</h1>
+        <span>Click any node to explore connections · Use sliders to see ecosystem health</span>
+      </div>
+      <div id="s9-body">
+        <div id="s9-map"><svg id="s9-map-svg"></svg></div>
+        <div id="s9-panel">
+          <div id="s9-pname">Click a node</div>
+          <p id="s9-pdesc">Select any element in the diagram to learn about its role in the Yellowstone ecosystem.</p>
+          <div id="s9-pconn"></div>
+        </div>
+      </div>
+      <div id="s9-bottom">
+        <div class="s9-sl-group">
+          <label>Wolf population <span id="s9-wval">14</span></label>
+          <input type="range" id="s9-wsl" min="0" max="14" value="14">
+        </div>
+        <div class="s9-sl-group">
+          <label>Human hunting pressure <span id="s9-hval">0</span></label>
+          <input type="range" id="s9-hsl" min="0" max="10" value="0">
+          <div class="s9-sl-sub">Simulates poaching / rancher conflict</div>
+        </div>
+        <div id="s9-legend">
+          <div class="s9-leg"><div class="s9-leg-line pos"></div>positive</div>
+          <div class="s9-leg"><div class="s9-leg-line neg"></div>negative</div>
+          <div class="s9-leg"><div class="s9-leg-line neu"></div>indirect</div>
+        </div>
+        <button id="s9-close-btn">↺ Restart</button>
+      </div>
+    `;
+
+    document.getElementById('s9-close-btn').addEventListener('click',()=>location.reload());
+
+    const nodes=[
+      {id:'humans',       label:'Humans',                        cx: 4,  cy:46, fact:'Humans reintroduced 14 wolves to Yellowstone in January 1995 after a 70-year absence. One deliberate decision cascaded across the entire ecosystem.'},
+      {id:'wolves',       label:'Wolves',                        cx:18,  cy:46, fact:'14 wolves arrived in 3 packs. Through direct predation and the "ecology of fear" they reshaped how elk moved, grazed, and behaved.'},
+      {id:'elk',          label:'Elk',                           cx:32,  cy:37, fact:'Population fell from ~19,000 to ~6,100 after wolf reintroduction. Crucially, surviving elk became healthier and stopped grazing riverbanks where they could be ambushed.'},
+      {id:'scavengers',   label:'Scavengers\n(ravens, eagles, bears)', cx:13, cy:63, fact:'Wolf-killed carcasses provided critical winter food for ravens, eagles, magpies, and bears — species that had struggled without this resource.'},
+      {id:'coyotes',      label:'Coyotes',                       cx:21,  cy:74, fact:'Coyote numbers dropped ~33% as wolves suppressed them. This "mesopredator release" allowed populations of small mammals to recover across the valley.'},
+      {id:'smallmammals', label:'Small mammals\n(mice, rabbits, voles)', cx:31, cy:83, fact:'With fewer coyotes hunting them, small mammal populations rebounded — restoring a key food source for raptors and other predators.'},
+      {id:'hawks',        label:'Hawks / foxes\n/ weasels',      cx:46,  cy:83, fact:'Raptors, foxes, and weasels that depend on small mammals thrived as their prey base grew. Biodiversity in this guild increased measurably.'},
+      {id:'trees',        label:'Trees &\nVegetation',           cx:52,  cy:46, fact:'Willows and aspens grew 5× taller within 6 years. Riverbank vegetation that had been grazed bare for decades recovered as elk avoided exposed areas.'},
+      {id:'land',         label:'Land',                          cx:41,  cy:63, fact:'As vegetation returned, bare eroded ground stabilised. Runoff slowed, soil anchored, and the land began healing after decades of overgrazing.'},
+      {id:'riverbanks',   label:'River banks',                   cx:63,  cy:28, fact:'Riverside willows and aspens stabilised the banks dramatically — their roots held soil that had been eroding for 70 years without wolves.'},
+      {id:'biodiversity', label:'Biodiversity',                  cx:72,  cy:26, fact:'Overall biodiversity surged. Songbirds, otters, pronghorn, muskrats, and many other species returned or increased significantly within years of wolf reintroduction.'},
+      {id:'beavers',      label:'Beavers',                       cx:68,  cy:46, fact:'From 1 colony in 1995 to 9 colonies by 2023. As ecosystem engineers, beaver dams create wetlands that support dozens of other species.'},
+      {id:'dams',         label:'Dams',                          cx:67,  cy:61, fact:'Beaver dams raised the water table, created ponds, and slowed river flow — physically transforming the landscape in ways that benefit countless species.'},
+      {id:'rivers',       label:'Rivers',                        cx:82,  cy:17, fact:'Rivers literally changed course. Stabilised banks and altered flow patterns physically reshaped Yellowstone\'s waterways — the wolves changed the geography of the land.'},
+      {id:'wetlands',     label:'Wetlands',                      cx:80,  cy:61, fact:'New wetland habitats emerged from beaver activity and bank stabilisation, supporting fish, amphibians, invertebrates, and migratory birds.'},
+      {id:'birds',        label:'Birds',                         cx:68,  cy:75, fact:'Songbird populations increased dramatically as riverside vegetation grew back, providing nesting sites and insect-rich feeding habitat.'},
+      {id:'fish',         label:'Fish',                          cx:91,  cy:39, fact:'Trout and other fish populations rebounded as rivers ran cleaner, water temperatures improved, and stable banks reduced sediment in the water.'},
+    ];
+
+    const edges=[
+      {id:'e1',  from:'humans',       to:'wolves',       label:'reintroduced',         type:'pos', curve:0   },
+      {id:'e2',  from:'wolves',       to:'elk',          label:'prey on',              type:'neg', curve:18  },
+      {id:'e3',  from:'wolves',       to:'elk',          label:'change movement of',   type:'neu', curve:-18 },
+      {id:'e4',  from:'wolves',       to:'scavengers',   label:'leave carcasses for',  type:'pos', curve:0   },
+      {id:'e5',  from:'wolves',       to:'coyotes',      label:'reduce',               type:'neg', curve:0   },
+      {id:'e6',  from:'elk',          to:'trees',        label:'overgraze',            type:'neg', curve:0   },
+      {id:'e7',  from:'coyotes',      to:'smallmammals', label:'prey on',              type:'neg', curve:0   },
+      {id:'e8',  from:'smallmammals', to:'hawks',        label:'provide food for',     type:'pos', curve:0   },
+      {id:'e9',  from:'trees',        to:'riverbanks',   label:'stabilize',            type:'pos', curve:0   },
+      {id:'e10', from:'trees',        to:'rivers',       label:'grow near',            type:'pos', curve:-90 },
+      {id:'e11', from:'trees',        to:'biodiversity', label:'increase',             type:'pos', curve:0   },
+      {id:'e12', from:'trees',        to:'beavers',      label:'provides food for',    type:'pos', curve:0   },
+      {id:'e13', from:'trees',        to:'birds',        label:'provides habitat for', type:'pos', curve:20  },
+      {id:'e14', from:'trees',        to:'land',         label:'grow on',              type:'pos', curve:0   },
+      {id:'e15', from:'riverbanks',   to:'rivers',       label:'shape',                type:'pos', curve:0   },
+      {id:'e16', from:'beavers',      to:'dams',         label:'build',                type:'pos', curve:0   },
+      {id:'e17', from:'dams',         to:'rivers',       label:'change course',        type:'neu', curve:-30 },
+      {id:'e18', from:'rivers',       to:'fish',         label:'provide habitat for',  type:'pos', curve:0   },
+      {id:'e19', from:'rivers',       to:'wetlands',     label:'slow',                 type:'pos', curve:0   },
+      {id:'e20', from:'wetlands',     to:'birds',        label:'support',              type:'pos', curve:0   },
+      {id:'e21', from:'wetlands',     to:'fish',         label:'support',              type:'pos', curve:30  },
+    ];
+
+    const nodeMap={};
+    nodes.forEach(n=>nodeMap[n.id]=n);
+    const nodeEls={};
+
+    const mapDiv=document.getElementById('s9-map');
+    nodes.forEach(n=>{
+      const el=document.createElement('div');
+      el.className='s9-node'; el.id='s9-n-'+n.id;
+      el.textContent=n.label;
+      el.style.left=n.cx+'%'; el.style.top=n.cy+'%';
+      mapDiv.appendChild(el);
+      nodeEls[n.id]=el;
+    });
+
+    const svg=document.getElementById('s9-map-svg');
+    const edgePathEls={};
+
+    function renderArrows(){
+      const W=mapDiv.clientWidth, H=mapDiv.clientHeight;
+      if(!W||!H) return;
+      svg.setAttribute('width',W); svg.setAttribute('height',H);
+      svg.innerHTML='';
+      svg.innerHTML=`<defs>
+        <marker id="ah-pos" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0.5 L0,5.5 L7,3 z" fill="#6ef06e"/></marker>
+        <marker id="ah-neg" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0.5 L0,5.5 L7,3 z" fill="#f06e6e"/></marker>
+        <marker id="ah-neu" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0.5 L0,5.5 L7,3 z" fill="rgba(255,255,255,0.45)"/></marker>
+      </defs>`;
+      const colors={pos:'#6ef06e',neg:'#f06e6e',neu:'rgba(255,255,255,0.35)'};
+      const nodeR=26;
+
+      edges.forEach(edge=>{
+        const fn=nodeMap[edge.from], tn=nodeMap[edge.to];
+        const x1=fn.cx/100*W, y1=fn.cy/100*H;
+        const x2=tn.cx/100*W, y2=tn.cy/100*H;
+        const dx=x2-x1, dy=y2-y1, len=Math.sqrt(dx*dx+dy*dy)||1;
+        const nx=-dy/len, ny=dx/len;
+        const cpx=(x1+x2)/2+nx*(edge.curve||0);
+        const cpy=(y1+y2)/2+ny*(edge.curve||0);
+        const sdx=cpx-x1, sdy=cpy-y1, sl=Math.sqrt(sdx*sdx+sdy*sdy)||1;
+        const sx=x1+sdx/sl*nodeR, sy=y1+sdy/sl*nodeR;
+        const edx=x2-cpx, edy=y2-cpy, el=Math.sqrt(edx*edx+edy*edy)||1;
+        const ex=x2-edx/el*nodeR, ey=y2-edy/el*nodeR;
+        const pathD=`M${sx.toFixed(1)},${sy.toFixed(1)} Q${cpx.toFixed(1)},${cpy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+        const color=colors[edge.type];
+
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d',pathD); path.setAttribute('fill','none');
+        path.setAttribute('stroke',color); path.setAttribute('stroke-width','1.5');
+        path.setAttribute('marker-end','url(#ah-'+edge.type+')');
+        path.setAttribute('opacity','0.6'); path.setAttribute('data-edge',edge.id);
+        svg.appendChild(path);
+
+        const lx=(0.25*sx+0.5*cpx+0.25*ex).toFixed(1);
+        const ly=(0.25*sy+0.5*cpy+0.25*ey-5).toFixed(1);
+        const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+        txt.setAttribute('x',lx); txt.setAttribute('y',ly);
+        txt.setAttribute('fill',color); txt.setAttribute('font-size','9.5');
+        txt.setAttribute('font-family','Georgia,serif'); txt.setAttribute('text-anchor','middle');
+        txt.setAttribute('opacity','0.7'); txt.setAttribute('data-edge',edge.id);
+        txt.textContent=edge.label;
+        svg.appendChild(txt);
+
+        edgePathEls[edge.id]={path,txt};
+      });
+    }
+
+    let activeNode=null;
+
+    function resetHighlight(){
+      Object.values(nodeEls).forEach(el=>el.classList.remove('s9-active','s9-connected','s9-dimmed'));
+      document.querySelectorAll('[data-edge]').forEach(el=>{
+        el.setAttribute('opacity', el.tagName==='path'?'0.6':'0.7');
+        if(el.tagName==='path') el.setAttribute('stroke-width','1.5');
+      });
+    }
+
+    function setActive(nodeId){
+      if(activeNode===nodeId){ activeNode=null; resetHighlight();
+        document.getElementById('s9-pname').textContent='Click a node';
+        document.getElementById('s9-pdesc').textContent='Select any element in the diagram to learn about its role in the Yellowstone ecosystem.';
+        document.getElementById('s9-pconn').textContent=''; return;
+      }
+      activeNode=nodeId;
+      const connected=new Set(), connEdges=new Set();
+      edges.forEach(e=>{
+        if(e.from===nodeId||e.to===nodeId){ connected.add(e.from); connected.add(e.to); connEdges.add(e.id); }
+      });
+      connected.delete(nodeId);
+      Object.entries(nodeEls).forEach(([id,el])=>{
+        el.classList.remove('s9-active','s9-connected','s9-dimmed');
+        if(id===nodeId) el.classList.add('s9-active');
+        else if(connected.has(id)) el.classList.add('s9-connected');
+        else el.classList.add('s9-dimmed');
+      });
+      document.querySelectorAll('[data-edge]').forEach(el=>{
+        const eid=el.getAttribute('data-edge');
+        if(connEdges.has(eid)){
+          el.setAttribute('opacity','0.95');
+          if(el.tagName==='path') el.setAttribute('stroke-width','2.5');
+        } else {
+          el.setAttribute('opacity','0.04');
+        }
+      });
+      const n=nodeMap[nodeId];
+      document.getElementById('s9-pname').textContent=n.label.replace(/\n/g,' ');
+      document.getElementById('s9-pdesc').textContent=n.fact;
+      const out=edges.filter(e=>e.from===nodeId).map(e=>`→ ${nodeMap[e.to].label.replace(/\n/g,' ')} (${e.label})`);
+      const inc=edges.filter(e=>e.to===nodeId).map(e=>`← ${nodeMap[e.from].label.replace(/\n/g,' ')} (${e.label})`);
+      document.getElementById('s9-pconn').textContent=[...inc,...out].join('\n');
+    }
+
+    nodes.forEach(n=>{
+      nodeEls[n.id].addEventListener('click',ev=>{ ev.stopPropagation(); setActive(n.id); });
+    });
+    mapDiv.addEventListener('click',()=>{ if(activeNode) setActive(activeNode); });
+
+    function updateHealth(){
+      const w=parseInt(document.getElementById('s9-wsl').value);
+      const h=parseInt(document.getElementById('s9-hsl').value);
+      const ew=Math.max(0,w-h*0.9);
+      const states={
+        humans:'neu',
+        wolves:       ew>=8?'healthy':ew>=4?'neu':'stressed',
+        elk:          ew>=8?'stressed':ew>=4?'neu':'healthy',
+        scavengers:   ew>=6?'healthy':ew>=3?'neu':'stressed',
+        coyotes:      ew>=6?'stressed':ew>=3?'neu':'healthy',
+        smallmammals: ew>=6?'healthy':ew>=3?'neu':'stressed',
+        hawks:        ew>=6?'healthy':ew>=3?'neu':'stressed',
+        trees:        ew>=8?'healthy':ew>=4?'neu':'stressed',
+        land:         ew>=8?'healthy':ew>=4?'neu':'stressed',
+        riverbanks:   ew>=8?'healthy':ew>=4?'neu':'stressed',
+        biodiversity: ew>=9?'healthy':ew>=4?'neu':'stressed',
+        beavers:      ew>=8?'healthy':ew>=4?'neu':'stressed',
+        dams:         ew>=8?'healthy':ew>=4?'neu':'stressed',
+        rivers:       ew>=8?'healthy':ew>=4?'neu':'stressed',
+        wetlands:     ew>=8?'healthy':ew>=4?'neu':'stressed',
+        birds:        ew>=9?'healthy':ew>=4?'neu':'stressed',
+        fish:         ew>=8?'healthy':ew>=4?'neu':'stressed',
+      };
+      Object.entries(states).forEach(([id,state])=>{
+        const el=nodeEls[id];
+        el.classList.remove('s9-healthy','s9-stressed');
+        if(state==='healthy') el.classList.add('s9-healthy');
+        else if(state==='stressed') el.classList.add('s9-stressed');
+      });
+    }
+
+    document.getElementById('s9-wsl').addEventListener('input',function(){
+      document.getElementById('s9-wval').textContent=this.value; updateHealth();
+    });
+    document.getElementById('s9-hsl').addEventListener('input',function(){
+      document.getElementById('s9-hval').textContent=this.value; updateHealth();
+    });
+
+    setTimeout(()=>{ renderArrows(); updateHealth(); },50);
+    window.addEventListener('resize',()=>setTimeout(renderArrows,50));
   }
 
 
