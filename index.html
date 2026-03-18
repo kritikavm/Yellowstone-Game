@@ -1638,9 +1638,14 @@ scene.addEventListener('click', function goS2() {
           <input type="range" id="s9-wsl" min="0" max="14" value="14">
         </div>
         <div class="s9-sl-group">
-          <label>Human hunting pressure <span id="s9-hval">0</span></label>
+          <label>Human wolf hunting <span id="s9-hval">0</span></label>
           <input type="range" id="s9-hsl" min="0" max="10" value="0">
-          <div class="s9-sl-sub">Simulates poaching / rancher conflict</div>
+          <div class="s9-sl-sub">Poaching / rancher conflict</div>
+        </div>
+        <div class="s9-sl-group">
+          <label>Human elk hunting <span id="s9-ehval">0</span></label>
+          <input type="range" id="s9-ehsl" min="0" max="10" value="0">
+          <div class="s9-sl-sub">Legal hunting / culling pressure</div>
         </div>
         <div id="s9-legend">
           <div class="s9-leg"><div class="s9-leg-line pos"></div>positive</div>
@@ -1674,6 +1679,7 @@ scene.addEventListener('click', function goS2() {
     ];
 
     const edges=[
+      {id:'e0',  from:'humans',       to:'elk',          label:'hunt / cull',          type:'neg', curve:30  },
       {id:'e1',  from:'humans',       to:'wolves',       label:'reintroduced',         type:'pos', curve:0   },
       {id:'e2',  from:'wolves',       to:'elk',          label:'prey on',              type:'neg', curve:18  },
       {id:'e3',  from:'wolves',       to:'elk',          label:'change movement of',   type:'neu', curve:-18 },
@@ -1816,16 +1822,20 @@ scene.addEventListener('click', function goS2() {
     function updateHealth(){
       const w=parseInt(document.getElementById('s9-wsl').value);
       const h=parseInt(document.getElementById('s9-hsl').value);
-      const ew=Math.max(0,w-h*0.9);
+      const eh=parseInt(document.getElementById('s9-ehsl').value);
+      const ew=Math.max(0,w-h*0.9);                    // effective wolves after wolf hunting
+      const elkPressure=ew>=8?eh:ew>=4?eh*0.6:eh*0.3; // wolf predation already reduces elk; hunting adds more
+      const elkStressed=ew>=8||elkPressure>=6;          // elk stressed if wolves high OR heavy human hunting
+      const elkHealthy=ew<=3&&elkPressure<=2;           // elk thrives only if few wolves AND light hunting
       const states={
         humans:'neu',
         wolves:       ew>=8?'healthy':ew>=4?'neu':'stressed',
-        elk:          ew>=8?'stressed':ew>=4?'neu':'healthy',
+        elk:          elkStressed?'stressed':elkHealthy?'healthy':'neu',
         scavengers:   ew>=6?'healthy':ew>=3?'neu':'stressed',
         coyotes:      ew>=6?'stressed':ew>=3?'neu':'healthy',
         smallmammals: ew>=6?'healthy':ew>=3?'neu':'stressed',
         hawks:        ew>=6?'healthy':ew>=3?'neu':'stressed',
-        trees:        ew>=8?'healthy':ew>=4?'neu':'stressed',
+        trees:        ew>=8&&elkPressure>=4?'healthy':ew>=8?'healthy':ew>=4?'neu':'stressed',
         land:         ew>=8?'healthy':ew>=4?'neu':'stressed',
         riverbanks:   ew>=8?'healthy':ew>=4?'neu':'stressed',
         biodiversity: ew>=9?'healthy':ew>=4?'neu':'stressed',
@@ -1849,6 +1859,9 @@ scene.addEventListener('click', function goS2() {
     });
     document.getElementById('s9-hsl').addEventListener('input',function(){
       document.getElementById('s9-hval').textContent=this.value; updateHealth();
+    });
+    document.getElementById('s9-ehsl').addEventListener('input',function(){
+      document.getElementById('s9-ehval').textContent=this.value; updateHealth();
     });
 
     setTimeout(()=>{ renderArrows(); updateHealth(); },50);
