@@ -45,6 +45,66 @@
       50%       { transform: translateY(-4px); }
     }
 
+    /* ── Screen 1 title card ────────────────────────────────────────────── */
+    #s1-hero {
+      position: absolute;
+      top: 12%; left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      pointer-events: auto;
+      z-index: 1100;
+    }
+    #s1-enter-btn {
+      display: inline-block;
+      margin-top: 32px;
+      font-family: Georgia, serif;
+      font-style: italic;
+      font-size: 22px;
+      color: #fff;
+      background: rgba(0,0,0,0.80);
+      border: 1px solid rgba(255,255,255,0.45);
+      padding: 10px 48px;
+      border-radius: 5px;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.2s;
+    }
+    #s1-enter-btn:hover { background: rgba(0,0,0,0.95); }
+    #s1-hero-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic; font-weight: normal;
+      font-size: 62px;
+      color: #fff;
+      background: rgba(0,0,0,0.80);
+      padding: 12px 36px;
+      border-radius: 5px;
+      display: inline-block;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+    #s1-hero-subtitle {
+      font-family: Georgia, serif;
+      font-style: italic; font-weight: normal;
+      font-size: 24px;
+      color: #fff;
+      background: rgba(0,0,0,0.80);
+      padding: 8px 28px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    #s1-hero-credit {
+      font-family: Georgia, serif;
+      font-size: 18px;
+      color: #fff;
+      background: rgba(0,0,0,0.80);
+      padding: 6px 24px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 28px;
+      letter-spacing: 0.04em;
+    }
+
     /* ── Screen 1 narration ─────────────────────────────────────────────── */
     #narration {
       position: absolute;
@@ -107,6 +167,20 @@
       pointer-events: none;
       z-index: 9999;
       transition: opacity 0.3s ease;
+    }
+    #sound-hint {
+      position: fixed;
+      top: 14px; right: 20px;
+      font-family: Georgia, serif;
+      font-style: italic;
+      font-size: 13px;
+      color: #fff;
+      background: rgba(0,0,0,0.65);
+      padding: 5px 12px;
+      border-radius: 4px;
+      z-index: 5000;
+      pointer-events: none;
+      opacity: 0.85;
     }
 
    
@@ -352,6 +426,17 @@
     padding: 6px 18px; border-radius: 5px; cursor: pointer; margin-left: auto;
   }
   #s9-close-btn:hover { background: rgba(255,255,255,0.1); }
+  #s9-footer {
+    text-align: center;
+    padding: 6px 24px 8px;
+    font-size: 11px; color: rgba(255,255,255,0.38);
+    font-family: Georgia, serif; font-style: italic;
+    background: rgba(0,0,0,0.5);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    letter-spacing: 0.03em;
+  }
+  #s9-footer a { color: rgba(255,255,255,0.55); text-decoration: underline; }
+  #s9-footer a:hover { color: #fff; }
   </style>
   <script src="ecosystem.js"></script>
   <script src="trees.js"></script>
@@ -361,9 +446,17 @@
 <audio id="bgMusic" src="audio/music.mp3" loop></audio>
 
 <div id="fade-overlay"></div>
+<div id="sound-hint">🔊 Turn sound on</div>
 
 <div id="scene">
   <img id="bg" src="images/background.png?v=2" alt="">
+
+  <div id="s1-hero">
+    <div id="s1-hero-title">Wolves of Yellowstone</div>
+    <div id="s1-hero-subtitle">An interactive simulation of extinction, return, and recovery.</div>
+    <div id="s1-hero-credit">Created by Kritika Mehta &mdash; MDes &rsquo;26, CCA</div>
+    <div><button id="s1-enter-btn">Enter</button></div>
+  </div>
 
   <div id="narration">
     <span id="line1" class="n-line">Yellowstone. 1870s.</span>
@@ -577,9 +670,16 @@
 
   const music = document.getElementById('bgMusic'); music.volume = 0.25; music.play().catch(()=>{ document.addEventListener('click', ()=>music.play(), {once:true}); });
 
-  setTimeout(() => { line1.style.opacity = '1'; }, 100);           // S1 — Line 1 "Yellowstone. 1870s." fades in
-  setTimeout(() => { line2.style.opacity = '1'; }, 1300);          // S1 — Line 2 subtitle fades in
-  setTimeout(() => { continueBtn.classList.add('show'); }, 1400);  // S1 — Continue button appears
+  // S1 — Enter button hides hero and starts narration
+  document.getElementById('s1-enter-btn').addEventListener('click', () => {
+    const hero = document.getElementById('s1-hero');
+    hero.style.transition = 'opacity 0.5s ease';
+    hero.style.opacity = '0';
+    setTimeout(() => { hero.style.display = 'none'; }, 500);
+    setTimeout(() => { line1.style.opacity = '1'; }, 600);          // S1 — Line 1 "Yellowstone. 1870s." fades in
+    setTimeout(() => { line2.style.opacity = '1'; }, 1800);         // S1 — Line 2 subtitle fades in
+    setTimeout(() => { continueBtn.classList.add('show'); }, 1900); // S1 — Continue button appears
+  });
 scene.addEventListener('click', function goS2() {
   scene.removeEventListener('click', goS2);
   doTransition(buildScreen2);
@@ -1113,7 +1213,7 @@ scene.addEventListener('click', function goS2() {
 
     // ── PATH A: 0 wolves ──────────────────────────────────────────────────────
     if (wolvesChosen===0) {
-      setTimeout(()=>{ showText('No wolves were released. The scientists\' proposal was rejected.','26px'); },3500);  // S7A — Narration: proposal rejected
+      setTimeout(()=>{ showText('But no wolves were released. The scientists\' proposal was rejected.','26px'); },3500);  // S7A — Narration: proposal rejected
       setTimeout(()=>{ showText('Without wolves, the elk continued to multiply unchecked.','26px'); },7000);           // S7A — Narration: elk multiply unchecked
       // 8 more elk fade in
       const extraElkA = newElkDefs.slice(0,8).map((d,i)=>{
@@ -1215,9 +1315,9 @@ scene.addEventListener('click', function goS2() {
     if (wolvesChosen>=14 && wolvesChosen<=17) {
       showScientistBadge();
       setTimeout(()=>{ showText('Fourteen wolves entered Yellowstone. The same choice scientists made in 1995.','26px'); },1000);  // S7D — Narration: 14 wolves (scientist's choice)
-      const arrivedAt=slideWolvesIn(14)+3500;
+      const arrivedAt=slideWolvesIn(14)+1000;
 
-      setTimeout(()=>{ showText('The elk had not seen a predator in 70 years. Everything changed.','26px'); },arrivedAt+3000);  // S7D — Narration: elk fear begins
+      setTimeout(()=>{ showText('The elk had not seen a predator in 70 years. Everything changed.','26px'); },arrivedAt+2000);  // S7D — Narration: elk fear begins
       const ww=window.innerWidth;
       setTimeout(()=>{
         s7ElkEls.forEach((img,i)=>{
@@ -1579,7 +1679,10 @@ scene.addEventListener('click', function goS2() {
     // Map button (always visible)
     const mapBtn=document.createElement('button');
     mapBtn.className='continue-btn'; mapBtn.textContent='→ See Interactive Map';
-    mapBtn.style.bottom='70px'; mapBtn.style.top='auto'; mapBtn.style.right='24px';
+    mapBtn.style.bottom='130px'; mapBtn.style.top='auto'; mapBtn.style.right='24px';
+    mapBtn.style.background='rgba(0,0,0,0.60)'; mapBtn.style.color='#fff';
+    mapBtn.style.borderRadius='8px'; mapBtn.style.padding='10px 20px';
+    mapBtn.style.border='none';
     scene.appendChild(mapBtn);
     mapBtn.classList.add('show');
     mapBtn.addEventListener('click',()=>buildScreen9());
@@ -1604,7 +1707,10 @@ scene.addEventListener('click', function goS2() {
     // Restart button
     const restartBtn=document.createElement('button');
     restartBtn.className='continue-btn'; restartBtn.textContent='↺ Restart';
-    restartBtn.style.bottom='20px'; restartBtn.style.top='auto'; restartBtn.style.right='24px';
+    restartBtn.style.bottom='75px'; restartBtn.style.top='auto'; restartBtn.style.right='24px';
+    restartBtn.style.background='rgba(0,0,0,0.60)'; restartBtn.style.color='#fff';
+    restartBtn.style.borderRadius='8px'; restartBtn.style.padding='10px 20px';
+    restartBtn.style.border='none';
     scene.appendChild(restartBtn);
     restartBtn.classList.add('show');
     restartBtn.addEventListener('click',()=>{ location.reload(); });
@@ -1653,6 +1759,10 @@ scene.addEventListener('click', function goS2() {
           <div class="s9-leg"><div class="s9-leg-line neu"></div>indirect</div>
         </div>
         <button id="s9-close-btn">↺ Restart</button>
+      </div>
+      <div id="s9-footer">
+        Created by Kritika Mehta &mdash; MDes &rsquo;26, CCA &nbsp;&middot;&nbsp;
+        <a href="https://www.linkedin.com/in/kritika-v-mehta/" target="_blank" rel="noopener">LinkedIn</a>
       </div>
     `;
 
